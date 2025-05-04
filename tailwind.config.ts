@@ -67,6 +67,13 @@ export default {
 					blue: '#0D5EAF',
 					white: '#FFFFFF',
 					gold: '#D4AF37'
+				},
+				dark: {
+					background: '#121212',
+					card: '#1E1E1E',
+					border: '#333333',
+					muted: '#2A2A2A',
+					highlight: '#252525'
 				}
 			},
 			borderRadius: {

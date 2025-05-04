@@ -28,13 +28,13 @@ const ArtistsPage = () => {
     <Layout>
       <div className="container mx-auto py-12 px-4">
         <div className="flex items-center mb-8">
-          <User className="mr-2 h-6 w-6 text-indigo-600" />
-          <h1 className="text-3xl font-bold">Greek Artist Kings</h1>
+          <User className="mr-2 h-6 w-6 text-indigo-400" />
+          <h1 className="text-3xl font-bold text-white">Greek Artist Kings</h1>
         </div>
         
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-pulse-subtle text-xl">Loading artists...</div>
+            <div className="animate-pulse-subtle text-xl text-gray-300">Loading artists...</div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
