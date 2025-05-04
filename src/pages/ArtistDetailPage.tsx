@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Artist, Song, spotifyService } from '../services/spotify';
 import Layout from '../components/Layout';
 import SongCard from '../components/SongCard';
-import { Star, ArrowUp, ArrowDown, Music } from 'lucide-react';
+import { Star, ArrowUp, ArrowDown, Music, User } from 'lucide-react';
 import { formatNumber } from '../utils/format';
 
 const ArtistDetailPage = () => {
@@ -53,7 +52,7 @@ const ArtistDetailPage = () => {
       <Layout>
         <div className="container mx-auto py-8 px-4 text-center">
           <h2 className="text-2xl">Artist not found</h2>
-          <Link to="/artists" className="text-greek-blue hover:underline mt-4 inline-block">
+          <Link to="/artists" className="text-primary hover:underline mt-4 inline-block">
             Return to Artists
           </Link>
         </div>
@@ -64,10 +63,10 @@ const ArtistDetailPage = () => {
   return (
     <Layout>
       <div className="relative">
-        <div className="h-64 bg-gradient-to-r from-greek-blue to-blue-700"></div>
+        <div className="h-64 bg-gradient-to-r from-indigo-600 to-purple-600"></div>
         <div className="container mx-auto px-4">
           <div className="relative -mt-24">
-            <div className="bg-white rounded-lg shadow-xl p-6">
+            <div className="bg-white rounded-xl shadow-xl p-6 dark:bg-gray-800">
               <div className="flex flex-col md:flex-row items-center md:items-start">
                 <img 
                   src={artist.imageUrl} 
@@ -77,7 +76,7 @@ const ArtistDetailPage = () => {
                 <div className="md:ml-8 mt-4 md:mt-0 text-center md:text-left">
                   <div className="flex items-center justify-center md:justify-start">
                     <h1 className="text-3xl font-bold">{artist.name}</h1>
-                    <div className="ml-3 bg-greek-blue text-white rounded-full px-3 py-1 text-sm font-semibold flex items-center">
+                    <div className="ml-3 bg-indigo-600 text-white rounded-full px-3 py-1 text-sm font-semibold flex items-center">
                       <Star className="w-4 h-4 mr-1" />
                       #{artist.rank}
                     </div>
@@ -94,21 +93,21 @@ const ArtistDetailPage = () => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-6 mt-6">
-                    <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="bg-indigo-50 p-4 rounded-lg">
                       <div className="flex items-center justify-center md:justify-start text-sm text-gray-600">
-                        <User className="w-4 h-4 mr-1 text-greek-blue" />
+                        <User className="w-4 h-4 mr-1 text-indigo-600" />
                         Followers
                       </div>
-                      <div className="text-xl font-bold text-greek-blue">
+                      <div className="text-xl font-bold text-indigo-600">
                         {formatNumber(artist.followers)}
                       </div>
                     </div>
-                    <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="bg-indigo-50 p-4 rounded-lg">
                       <div className="flex items-center justify-center md:justify-start text-sm text-gray-600">
-                        <Music className="w-4 h-4 mr-1 text-greek-blue" />
+                        <Music className="w-4 h-4 mr-1 text-indigo-600" />
                         Total Streams
                       </div>
-                      <div className="text-xl font-bold text-greek-blue">
+                      <div className="text-xl font-bold text-indigo-600">
                         {formatNumber(artist.streams)}
                       </div>
                     </div>
@@ -122,7 +121,7 @@ const ArtistDetailPage = () => {
 
       <div className="container mx-auto py-8 px-4">
         <div className="flex items-center mb-6">
-          <Music className="mr-2 h-5 w-5 text-greek-blue" />
+          <Music className="mr-2 h-5 w-5 text-indigo-600" />
           <h2 className="text-2xl font-bold">Top Songs</h2>
         </div>
         

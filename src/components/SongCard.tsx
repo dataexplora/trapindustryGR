@@ -12,15 +12,15 @@ interface SongCardProps {
 
 const SongCard = ({ song, rank = song.rank, showRank = true }: SongCardProps) => {
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
-      <div className="flex items-center p-3">
+    <div className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md border border-gray-100">
+      <div className="flex items-center p-4">
         {showRank && (
-          <div className="mr-3 bg-greek-blue text-white rounded-full w-8 h-8 flex items-center justify-center font-bold shrink-0">
+          <div className="mr-3 bg-gradient-to-r from-indigo-600 to-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold shrink-0">
             {rank}
           </div>
         )}
-        <div className="relative mr-3 shrink-0">
-          <img src={song.imageUrl} alt={song.title} className="w-12 h-12 object-cover rounded-md" />
+        <div className="relative mr-4 shrink-0">
+          <img src={song.imageUrl} alt={song.title} className="w-14 h-14 object-cover rounded-lg" />
         </div>
         <div className="flex-grow overflow-hidden">
           <h3 className="font-semibold truncate">{song.title}</h3>
@@ -28,7 +28,7 @@ const SongCard = ({ song, rank = song.rank, showRank = true }: SongCardProps) =>
         </div>
         <div className="flex flex-col items-end ml-3">
           <div className="text-sm text-gray-600">
-            <span className="text-greek-blue font-medium">{formatNumber(song.streams)}</span>
+            <span className="text-indigo-600 font-medium">{formatNumber(song.streams)}</span>
           </div>
           <MusicVisualizer />
         </div>

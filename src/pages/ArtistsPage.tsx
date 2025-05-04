@@ -26,9 +26,9 @@ const ArtistsPage = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto py-12 px-4">
         <div className="flex items-center mb-8">
-          <User className="mr-2 h-6 w-6 text-greek-blue" />
+          <User className="mr-2 h-6 w-6 text-indigo-600" />
           <h1 className="text-3xl font-bold">Greek Artist Kings</h1>
         </div>
         

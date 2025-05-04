@@ -18,15 +18,15 @@ const ArtistCard = ({ artist, rank = artist.rank, showRank = true }: ArtistCardP
       to={`/artist/${artist.id}`} 
       className="group"
     >
-      <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 border border-gray-100">
         <div className="relative">
           {showRank && (
-            <div className="absolute top-2 left-2 bg-greek-blue text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
+            <div className="absolute top-2 left-2 bg-gradient-to-r from-indigo-600 to-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
               {rank}
             </div>
           )}
-          <div className="absolute top-2 right-2 flex items-center space-x-1 bg-black bg-opacity-50 text-greek-gold px-2 py-1 rounded-full">
-            <Star className="h-3 w-3 fill-greek-gold text-greek-gold" />
+          <div className="absolute top-2 right-2 flex items-center space-x-1 bg-black bg-opacity-60 text-yellow-400 px-2 py-1 rounded-full">
+            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
             <span className="text-xs">{formatNumber(artist.followers)}</span>
           </div>
           <img 
@@ -43,7 +43,7 @@ const ArtistCard = ({ artist, rank = artist.rank, showRank = true }: ArtistCardP
           </div>
           <div className="mt-2 flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              <span className="text-greek-blue font-medium">{formatNumber(artist.streams)}</span> streams
+              <span className="text-indigo-600 font-medium">{formatNumber(artist.streams)}</span> streams
             </div>
             <div className="text-xs bg-gray-100 px-2 py-1 rounded-full">
               {artist.genres[0]}

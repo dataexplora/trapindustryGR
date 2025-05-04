@@ -35,7 +35,7 @@ const HomePage = () => {
 
   return (
     <Layout>
-      <div className="bg-greek-blue text-white py-12 px-4">
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-16 px-4">
         <div className="container mx-auto text-center">
           <h1 className="text-4xl font-bold mb-4">Ελληνική Μουσική Rankings</h1>
           <p className="text-xl max-w-2xl mx-auto">
@@ -44,21 +44,21 @@ const HomePage = () => {
         </div>
       </div>
 
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto py-12 px-4">
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-pulse-subtle text-xl">Loading music data...</div>
           </div>
         ) : (
           <>
-            <div className="mb-12">
+            <div className="mb-16">
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center">
-                  <User className="mr-2 h-5 w-5 text-greek-blue" />
+                  <User className="mr-2 h-5 w-5 text-indigo-600" />
                   <h2 className="text-2xl font-bold">Top Greek Artists</h2>
                 </div>
                 <Link to="/artists">
-                  <Button variant="outline" className="border-greek-blue text-greek-blue hover:text-greek-blue hover:bg-blue-50">
+                  <Button variant="outline" className="border-indigo-600 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
                     View All
                   </Button>
                 </Link>
@@ -73,11 +73,11 @@ const HomePage = () => {
             <div>
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center">
-                  <Music className="mr-2 h-5 w-5 text-greek-blue" />
+                  <Music className="mr-2 h-5 w-5 text-indigo-600" />
                   <h2 className="text-2xl font-bold">Top Greek Songs</h2>
                 </div>
                 <Link to="/songs">
-                  <Button variant="outline" className="border-greek-blue text-greek-blue hover:text-greek-blue hover:bg-blue-50">
+                  <Button variant="outline" className="border-indigo-600 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
                     View All
                   </Button>
                 </Link>
