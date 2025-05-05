@@ -1,73 +1,155 @@
-# Welcome to your Lovable project
+# Spotify Artist Data API with Supabase
 
-## Project info
+This project provides a system to fetch artist data from the Spotify API and store it in a Supabase database for easy access in your application.
 
-**URL**: https://lovable.dev/projects/93067f16-b66d-4fa9-9bc0-67e8c69b63e8
+## Setup Instructions
 
-## How can I edit this code?
+### 1. Supabase Setup
 
-There are several ways of editing your application.
+1. Create a Supabase account at [supabase.com](https://supabase.com)
+2. Create a new project
+3. Go to the SQL Editor in your Supabase dashboard
+4. Run the SQL from `database_schema.sql` to create all necessary tables
 
-**Use Lovable**
+### 2. Configure Environment Variables
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/93067f16-b66d-4fa9-9bc0-67e8c69b63e8) and start prompting.
+1. Copy `env.example` to `.env`
+2. Fill in your Supabase and Spotify API credentials:
+   - Get Supabase URL and anon key from your Supabase project settings
+   - Get Spotify credentials by creating an app at [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/)
 
-Changes made via Lovable will be committed automatically to this repo.
+### 3. Install Dependencies
 
-**Use your preferred IDE**
+```bash
+npm install
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 4. Import Artist Data
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Import data from a Spotify API response file:
 
-Follow these steps:
+```bash
+# Using the default file (artist_serverapi_response.json)
+npm run import
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Or specify a different file
+node import-artist-data.js path/to/your/file.json
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 5. Start the API Server
 
-# Step 3: Install the necessary dependencies.
-npm i
+```bash
+npm start
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## API Endpoints
+
+The project provides a simple REST API to access the artist data:
+
+- **GET /api/artists** - Get a list of all artists (basic info)
+- **GET /api/artists/:id** - Get detailed information about a specific artist
+- **POST /api/artists/:id/update** - Fetch fresh data from Spotify API and update the database
+
+## Example API Usage
+
+```javascript
+// Get all artists
+fetch('http://localhost:3000/api/artists')
+  .then(response => response.json())
+  .then(data => console.log(data));
+
+// Get a specific artist
+fetch('http://localhost:3000/api/artists/5caqmh5ZXnKSx8vmdsCA9v')
+  .then(response => response.json())
+  .then(data => console.log(data));
+
+// Update artist data from Spotify
+fetch('http://localhost:3000/api/artists/5caqmh5ZXnKSx8vmdsCA9v/update', {
+  method: 'POST'
+})
+  .then(response => response.json())
+  .then(data => console.log(data));
+```
+
+## Project Structure
+
+- `database_schema.sql` - SQL schema for the Supabase database
+- `supabase-setup.js` - Supabase client configuration
+- `artistDataService.js` - Service for storing artist data in Supabase
+- `spotify-fetch.js` - Service for fetching artist data from Spotify API
+- `import-artist-data.js` - Script to import data from a JSON file
+- `index.js` - Express API server
+
+## Database Schema
+
+The database is designed to efficiently store all aspects of the Spotify artist data:
+
+- Artist basic information
+- External links
+- Images (avatar, header, gallery)
+- Top cities
+- Discography (albums, singles, etc.)
+- Top tracks
+- Related artists
+- Playlists
+- And more
+
+## Next Steps
+
+1. Complete the implementation of all the data processing methods in `artistDataService.js`
+2. Create API endpoints to serve the data to your frontend application
+3. Implement a scheduled job to keep artist data up-to-date
+
+## License
+
+MIT
+
+## Environment Setup
+
+This application uses Supabase for data storage. You need to create a `.env` file in the root directory with the following variables:
+
+```
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+Replace `your-project-id` and `your-supabase-anon-key` with your actual Supabase project details.
+
+## Development
+
+To start the development server:
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Building for Production
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+To build the app for production:
 
-**Use GitHub Codespaces**
+```bash
+npm run build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Database Schema
 
-## What technologies are used for this project?
+The application expects two tables in your Supabase database:
 
-This project is built with:
+### Artists Table
+- id (string, primary key)
+- name (string)
+- imageUrl (string)
+- followers (number)
+- streams (number)
+- genres (array of strings)
+- rank (number)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/93067f16-b66d-4fa9-9bc0-67e8c69b63e8) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Songs Table
+- id (string, primary key)
+- title (string)
+- artist (string)
+- artistId (string, foreign key to Artists.id)
+- imageUrl (string)
+- streams (number)
+- releaseDate (string in YYYY-MM-DD format)
+- rank (number)

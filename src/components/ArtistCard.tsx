@@ -1,18 +1,23 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Artist } from '../services/spotify';
-import { Star } from 'lucide-react';
+import { ArtistWithImages } from '../services/artistService';
+import { Star, Music, User, Users } from 'lucide-react';
 import MusicVisualizer from './MusicVisualizer';
 import { formatNumber } from '../utils/format';
 
 interface ArtistCardProps {
-  artist: Artist;
+  artist: ArtistWithImages;
   rank?: number;
   showRank?: boolean;
 }
 
-const ArtistCard = ({ artist, rank = artist.rank, showRank = true }: ArtistCardProps) => {
+const ArtistCard = ({ artist, rank, showRank = true }: ArtistCardProps) => {
+  // Default avatar image if none is available
+  const avatarImage = artist.images?.avatar || 'https://via.placeholder.com/400x400?text=No+Image';
+  
+  // Choose what genres to display - we'll use a placeholder since genres aren't in our DB schema
+  const genres = ['Music'];
+
   return (
     <Link 
       to={`/artist/${artist.id}`} 
@@ -20,17 +25,17 @@ const ArtistCard = ({ artist, rank = artist.rank, showRank = true }: ArtistCardP
     >
       <div className="bg-dark-card rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 border border-dark-border">
         <div className="relative">
-          {showRank && (
+          {showRank && rank && (
             <div className="absolute top-2 left-2 bg-gradient-to-r from-indigo-800 to-purple-700 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
               {rank}
             </div>
           )}
           <div className="absolute top-2 right-2 flex items-center space-x-1 bg-black/80 text-yellow-400 px-2 py-1 rounded-full">
-            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-            <span className="text-xs">{formatNumber(artist.followers)}</span>
+            <Users className="h-3 w-3 text-yellow-400" />
+            <span className="text-xs">{formatNumber(artist.followers || 0)}</span>
           </div>
           <img 
-            src={artist.imageUrl} 
+            src={avatarImage} 
             alt={artist.name} 
             className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
           />
@@ -43,10 +48,10 @@ const ArtistCard = ({ artist, rank = artist.rank, showRank = true }: ArtistCardP
           </div>
           <div className="mt-2 flex items-center justify-between">
             <div className="text-sm text-gray-400">
-              <span className="text-indigo-400 font-medium">{formatNumber(artist.streams)}</span> streams
+              <span className="text-indigo-400 font-medium">{formatNumber(artist.monthly_listeners || 0)}</span> monthly
             </div>
             <div className="text-xs bg-dark-muted px-2 py-1 rounded-full text-gray-300">
-              {artist.genres[0]}
+              {artist.verified ? 'Verified' : 'Artist'}
             </div>
           </div>
         </div>

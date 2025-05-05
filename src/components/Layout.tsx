@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Music, ListOrdered, User } from 'lucide-react';
+import { Music, ListOrdered, User, Database, TrendingUp } from 'lucide-react';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -12,7 +11,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="container mx-auto px-4 flex justify-between items-center">
           <Link to="/" className="flex items-center space-x-2">
             <Music className="h-6 w-6" />
-            <h1 className="text-xl font-bold">Ελληνική Μουσική</h1>
+            <h1 className="text-xl font-bold">Melodima Music</h1>
           </Link>
           <nav>
             <ul className="flex space-x-6">
@@ -23,12 +22,24 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </li>
               <li>
                 <Link to="/artists" className={`hover:text-white/80 transition-colors ${location.pathname === '/artists' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
-                  Artist Kings
+                  All Artists
+                </Link>
+              </li>
+              <li>
+                <Link to="/top-artists" className={`hover:text-white/80 transition-colors flex items-center ${location.pathname === '/top-artists' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
+                  <TrendingUp className="h-4 w-4 mr-1" />
+                  Top Artists
                 </Link>
               </li>
               <li>
                 <Link to="/songs" className={`hover:text-white/80 transition-colors ${location.pathname === '/songs' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
-                  Top 50
+                  Songs
+                </Link>
+              </li>
+              <li>
+                <Link to="/db-explorer" className={`hover:text-white/80 transition-colors flex items-center ${location.pathname === '/db-explorer' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
+                  <Database className="h-4 w-4 mr-1" />
+                  DB Explorer
                 </Link>
               </li>
             </ul>
@@ -42,8 +53,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       
       <footer className="bg-black text-white py-6">
         <div className="container mx-auto px-4 text-center">
-          <p>© 2025 Ελληνική Μουσική - Greek Music Rankings</p>
-          <p className="text-sm opacity-75 mt-1">Stream data provided from Spotify</p>
+          <p>© 2025 Melodima Music</p>
+          <p className="text-sm opacity-75 mt-1">Powered by Supabase</p>
         </div>
       </footer>
     </div>

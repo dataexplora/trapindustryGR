@@ -1,3 +1,4 @@
+import { supabase } from '@/lib/supabase';
 
 // This is a mock service for demo purposes
 // In a real app, you'd integrate with Spotify's API with proper authentication
@@ -23,7 +24,7 @@ export interface Song {
   rank: number;
 }
 
-// Mock data for Greek artists
+// Mock data for Greek artists - will keep this as fallback
 const topGreekArtists: Artist[] = [
   {
     id: "1",
@@ -99,7 +100,7 @@ const topGreekArtists: Artist[] = [
   },
 ];
 
-// Mock data for top Greek songs
+// Mock data for top Greek songs - will keep this as fallback
 const topGreekSongs: Song[] = [
   {
     id: "1",
@@ -217,34 +218,150 @@ for (let i = 11; i <= 50; i++) {
   });
 }
 
+// Helper function to handle Supabase responses
+const handleSupabaseResponse = (response: any, fallbackData: any) => {
+  if (response.error) {
+    console.error('Supabase error:', response.error);
+    return fallbackData; // Use fallback data on error
+  }
+  
+  if (!response.data || response.data.length === 0) {
+    console.warn('No data returned from Supabase');
+    return fallbackData; // Use fallback data when no data is returned
+  }
+  
+  return response.data;
+};
+
+// Spotify service with real Supabase integration
 export const spotifyService = {
+  // Get top artists from Supabase
   getTopArtists: async (): Promise<Artist[]> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return topGreekArtists;
+    try {
+      const response = await supabase
+        .from('artists')
+        .select('*')
+        .order('rank', { ascending: true });
+      
+      return handleSupabaseResponse(response, topGreekArtists);
+    } catch (error) {
+      console.error('Error fetching artists:', error);
+      return topGreekArtists; // Fallback to mock data on error
+    }
   },
   
+  // Get top songs from Supabase
   getTopSongs: async (): Promise<Song[]> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return topGreekSongs;
+    try {
+      const response = await supabase
+        .from('songs')
+        .select('*')
+        .order('rank', { ascending: true });
+      
+      return handleSupabaseResponse(response, topGreekSongs);
+    } catch (error) {
+      console.error('Error fetching songs:', error);
+      return topGreekSongs; // Fallback to mock data on error
+    }
   },
   
-  getArtistById: async (id: string): Promise<Artist | undefined> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 200));
-    return topGreekArtists.find(artist => artist.id === id);
+  // Get artist by ID from Supabase
+  getArtistById: async (id: string): Promise<Artist | null> => {
+    try {
+      const response = await supabase
+        .from('artists')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (response.error) {
+        console.error('Error fetching artist:', response.error);
+        // Fallback to mock data
+        return topGreekArtists.find(artist => artist.id === id) || null;
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching artist by ID:', error);
+      // Fallback to mock data
+      return topGreekArtists.find(artist => artist.id === id) || null;
+    }
   },
   
-  getSongById: async (id: string): Promise<Song | undefined> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 200));
-    return topGreekSongs.find(song => song.id === id);
+  // Get songs by artist ID from Supabase
+  getSongsByArtistId: async (artistId: string): Promise<Song[]> => {
+    try {
+      const response = await supabase
+        .from('songs')
+        .select('*')
+        .eq('artistId', artistId)
+        .order('streams', { ascending: false });
+      
+      if (response.error) {
+        console.error('Error fetching songs by artist:', response.error);
+        // Fallback to mock data
+        return topGreekSongs.filter(song => song.artistId === artistId);
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching songs by artist ID:', error);
+      // Fallback to mock data
+      return topGreekSongs.filter(song => song.artistId === artistId);
+    }
   },
   
-  getArtistSongs: async (artistId: string): Promise<Song[]> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return topGreekSongs.filter(song => song.artistId === artistId);
+  // Search artists from Supabase
+  searchArtists: async (query: string): Promise<Artist[]> => {
+    try {
+      const response = await supabase
+        .from('artists')
+        .select('*')
+        .ilike('name', `%${query}%`);
+      
+      if (response.error) {
+        console.error('Error searching artists:', response.error);
+        // Fallback to mock data
+        return topGreekArtists.filter(artist => 
+          artist.name.toLowerCase().includes(query.toLowerCase())
+        );
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error searching artists:', error);
+      // Fallback to mock data
+      return topGreekArtists.filter(artist => 
+        artist.name.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+  },
+  
+  // Search songs from Supabase
+  searchSongs: async (query: string): Promise<Song[]> => {
+    try {
+      const response = await supabase
+        .from('songs')
+        .select('*')
+        .or(`title.ilike.%${query}%, artist.ilike.%${query}%`);
+      
+      if (response.error) {
+        console.error('Error searching songs:', response.error);
+        // Fallback to mock data
+        return topGreekSongs.filter(song => 
+          song.title.toLowerCase().includes(query.toLowerCase()) || 
+          song.artist.toLowerCase().includes(query.toLowerCase())
+        );
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error searching songs:', error);
+      // Fallback to mock data
+      return topGreekSongs.filter(song => 
+        song.title.toLowerCase().includes(query.toLowerCase()) || 
+        song.artist.toLowerCase().includes(query.toLowerCase())
+      );
+    }
   }
 };
