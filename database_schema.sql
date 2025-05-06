@@ -165,4 +165,28 @@ CREATE INDEX idx_artist_albums_album_id ON artist_albums(album_id);
 CREATE INDEX idx_artist_tracks_artist_id ON artist_tracks(artist_id);
 CREATE INDEX idx_artist_tracks_track_id ON artist_tracks(track_id);
 CREATE INDEX idx_artist_playlists_artist_id ON artist_playlists(artist_id);
-CREATE INDEX idx_tracks_album_id ON tracks(album_id); 
+CREATE INDEX idx_tracks_album_id ON tracks(album_id);
+
+-- Genres and musical categories
+CREATE TABLE genres (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    color VARCHAR(20), -- For UI display (hex color)
+    parent_genre_id VARCHAR(50) REFERENCES genres(id), -- For hierarchical genres
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Artist-Genre relationships
+CREATE TABLE artist_genres (
+    artist_id VARCHAR(50) REFERENCES artists(id) ON DELETE CASCADE,
+    genre_id VARCHAR(50) REFERENCES genres(id) ON DELETE CASCADE,
+    primary_genre BOOLEAN DEFAULT FALSE, -- Flag for the artist's primary genre
+    strength FLOAT, -- Numeric value 0-1 indicating how strongly the artist represents this genre
+    PRIMARY KEY (artist_id, genre_id)
+);
+
+-- Create index for genre queries
+CREATE INDEX idx_artist_genres_artist_id ON artist_genres(artist_id);
+CREATE INDEX idx_artist_genres_genre_id ON artist_genres(genre_id); 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Music, ListOrdered, User, Database, TrendingUp } from 'lucide-react';
+import { Music, ListOrdered, User, TrendingUp } from 'lucide-react';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -34,12 +34,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <li>
                 <Link to="/songs" className={`hover:text-white/80 transition-colors ${location.pathname === '/songs' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
                   Songs
-                </Link>
-              </li>
-              <li>
-                <Link to="/db-explorer" className={`hover:text-white/80 transition-colors flex items-center ${location.pathname === '/db-explorer' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
-                  <Database className="h-4 w-4 mr-1" />
-                  DB Explorer
                 </Link>
               </li>
             </ul>

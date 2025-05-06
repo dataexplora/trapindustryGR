@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArtistWithImages, artistService } from '../services/artistService';
 import Layout from '../components/Layout';
 import { 
   Star, Music, User, Users, ExternalLink, Calendar, Heart, 
-  Instagram, Twitter, Youtube, Facebook, Globe, Link2
+  Instagram, Twitter, Youtube, Facebook, Globe, Link2, Headphones,
+  Play, Clock, ChevronDown, ChevronUp, MapPin
 } from 'lucide-react';
-import { formatNumber } from '../utils/format';
+import { formatNumber, formatDuration } from '../utils/format';
 
 // Helper to get the appropriate icon for a social link
 const getSocialIcon = (name: string) => {
@@ -23,6 +24,24 @@ const ArtistDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const [artist, setArtist] = useState<ArtistWithImages | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [topTracks, setTopTracks] = useState<any[]>([]);
+  const [totalStreams, setTotalStreams] = useState<number>(0);
+  const [showTopCities, setShowTopCities] = useState(false);
+  const topCitiesRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (topCitiesRef.current && !topCitiesRef.current.contains(event.target as Node)) {
+        setShowTopCities(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchArtistData = async () => {
@@ -33,6 +52,14 @@ const ArtistDetailPage = () => {
           
           if (artistData) {
             setArtist(artistData);
+            
+            // Fetch top tracks
+            const tracks = await artistService.getArtistTopTracks(id);
+            setTopTracks(tracks);
+            
+            // Fetch total stream count
+            const streams = await artistService.getArtistTotalStreamCount(id);
+            setTotalStreams(streams);
           }
         }
       } catch (error) {
@@ -44,6 +71,11 @@ const ArtistDetailPage = () => {
 
     fetchArtistData();
   }, [id]);
+
+  // Toggle top cities dropdown
+  const toggleTopCities = () => {
+    setShowTopCities(!showTopCities);
+  };
 
   if (isLoading) {
     return (
@@ -125,36 +157,87 @@ const ArtistDetailPage = () => {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
                     <div className="bg-dark-muted p-4 rounded-lg border border-dark-border">
                       <div className="flex items-center justify-center md:justify-start text-sm text-gray-400">
                         <Users className="w-4 h-4 mr-1 text-indigo-400" />
-                        Followers
+                        <span>Followers</span>
                       </div>
                       <div className="text-xl font-bold text-white">
                         {formatNumber(artist.followers || 0)}
                       </div>
                     </div>
+                    
+                    {/* Monthly Listeners Card with Dropdown */}
+                    <div ref={topCitiesRef} className="relative">
+                      <div 
+                        className={`bg-dark-muted p-4 rounded-lg border ${showTopCities ? 'border-indigo-500' : 'border-dark-border'} ${artist.topCities && artist.topCities.length > 0 ? 'cursor-pointer hover:border-indigo-400' : ''}`}
+                        onClick={artist.topCities && artist.topCities.length > 0 ? toggleTopCities : undefined}
+                      >
+                        <div className="flex items-center justify-center md:justify-start text-sm text-gray-400">
+                          <Heart className="w-4 h-4 mr-1 text-pink-400" />
+                          <span>Monthly Listeners</span>
+                          {artist.topCities && artist.topCities.length > 0 && (
+                            <span className="ml-1">
+                              {showTopCities ? 
+                                <ChevronUp className="w-4 h-4 text-indigo-400" /> : 
+                                <ChevronDown className="w-4 h-4 text-indigo-400" />
+                              }
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xl font-bold text-white">
+                          {formatNumber(artist.monthly_listeners || 0)}
+                        </div>
+                      </div>
+                      
+                      {/* Top Cities Dropdown */}
+                      {showTopCities && artist.topCities && artist.topCities.length > 0 && (
+                        <div className="absolute z-10 mt-2 w-full bg-dark-card rounded-lg border border-dark-border shadow-xl overflow-hidden">
+                          <div className="px-4 py-3 border-b border-dark-border bg-dark-card/80">
+                            <h3 className="text-sm font-semibold text-white">Top Cities</h3>
+                          </div>
+                          <div className="max-h-60 overflow-y-auto">
+                            {artist.topCities.map((city) => (
+                              <div key={city.id} className="px-4 py-3 hover:bg-dark-muted border-b border-dark-border/50 last:border-b-0 transition-colors duration-150">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center">
+                                    <span className="w-8 h-6 flex items-center justify-center text-xs bg-dark-muted rounded mr-3 text-indigo-400 font-medium border border-indigo-400/30">
+                                      {city.country}
+                                    </span>
+                                    <span className="text-white font-medium">{city.city}</span>
+                                  </div>
+                                  <div className="text-gray-400 text-sm font-medium">
+                                    {formatNumber(city.listener_count)}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
                     <div className="bg-dark-muted p-4 rounded-lg border border-dark-border">
                       <div className="flex items-center justify-center md:justify-start text-sm text-gray-400">
-                        <Heart className="w-4 h-4 mr-1 text-pink-400" />
-                        Monthly Listeners
+                        <Play className="w-4 h-4 mr-1 text-green-400" />
+                        <span>Total Streams</span>
                       </div>
                       <div className="text-xl font-bold text-white">
-                        {formatNumber(artist.monthly_listeners || 0)}
+                        {formatNumber(totalStreams)}
                       </div>
                     </div>
-                    {artist.world_rank && (
+                    {artist.world_rank ? (
                       <div className="bg-dark-muted p-4 rounded-lg border border-dark-border">
                         <div className="flex items-center justify-center md:justify-start text-sm text-gray-400">
                           <Star className="w-4 h-4 mr-1 text-yellow-400" />
-                          World Rank
+                          <span>World Rank</span>
                         </div>
                         <div className="text-xl font-bold text-white">
                           #{formatNumber(artist.world_rank)}
                         </div>
                       </div>
-                    )}
+                    ) : null}
                   </div>
 
                   {/* Spotify Link */}
@@ -177,6 +260,56 @@ const ArtistDetailPage = () => {
           </div>
         </div>
       </div>
+      
+      {/* Known For - Top Tracks Section */}
+      {topTracks.length > 0 && (
+        <div className="container mx-auto py-8 px-4">
+          <div className="flex items-center mb-6">
+            <Headphones className="mr-2 h-5 w-5 text-indigo-400" />
+            <h2 className="text-2xl font-bold text-white">Known For</h2>
+          </div>
+          
+          <div className="bg-dark-card rounded-xl shadow-lg border border-dark-border p-4">
+            <div className="grid grid-cols-12 border-b border-dark-border pb-2 mb-4 text-gray-400 text-sm">
+              <div className="col-span-1">#</div>
+              <div className="col-span-6 md:col-span-5">Title</div>
+              <div className="hidden md:block md:col-span-3">Album</div>
+              <div className="col-span-4 md:col-span-2 text-right">Plays</div>
+              <div className="col-span-1 text-right">Length</div>
+            </div>
+            
+            {topTracks.map((track, index) => (
+              <a 
+                key={track.id} 
+                href={track.share_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="grid grid-cols-12 py-2 hover:bg-dark-muted rounded px-2 group"
+              >
+                <div className="col-span-1 flex items-center text-gray-400">
+                  <span className="group-hover:hidden">{index + 1}</span>
+                  <Play className="w-4 h-4 hidden group-hover:block text-white" />
+                </div>
+                <div className="col-span-6 md:col-span-5 font-medium text-white truncate">
+                  {track.name}
+                  {track.explicit && (
+                    <span className="ml-2 text-xs bg-gray-600 text-gray-300 px-1 rounded">E</span>
+                  )}
+                </div>
+                <div className="hidden md:block md:col-span-3 text-gray-400 truncate">
+                  {track.album?.name || '—'}
+                </div>
+                <div className="col-span-4 md:col-span-2 text-right text-gray-400">
+                  {formatNumber(track.play_count || 0)}
+                </div>
+                <div className="col-span-1 text-right text-gray-400">
+                  {formatDuration(track.duration_ms || 0)}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="container mx-auto py-8 px-4">
         <div className="flex items-center mb-6">
