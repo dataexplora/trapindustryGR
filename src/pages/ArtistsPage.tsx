@@ -2,19 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { ArtistWithImages, artistService } from '../services/artistService';
 import Layout from '../components/Layout';
 import ArtistCard from '../components/ArtistCard';
-import { User } from 'lucide-react';
+import { User, SlidersHorizontal, Users } from 'lucide-react';
+import { formatNumber } from '../utils/format';
 
 const ArtistsPage = () => {
   const [artists, setArtists] = useState<ArtistWithImages[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [minListeners, setMinListeners] = useState(100000); // Default minimum 100k
 
   useEffect(() => {
     const fetchArtists = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await artistService.getAllArtists();
+        const data = await artistService.getAllArtists(minListeners);
         setArtists(data);
       } catch (err) {
         console.error('Error fetching artists:', err);
@@ -25,14 +27,43 @@ const ArtistsPage = () => {
     };
 
     fetchArtists();
-  }, []);
+  }, [minListeners]);
 
   return (
     <Layout>
       <div className="container mx-auto py-12 px-4">
-        <div className="flex items-center mb-8">
-          <User className="mr-2 h-6 w-6 text-indigo-400" />
-          <h1 className="text-3xl font-bold text-white">Artists Collection</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <User className="mr-2 h-6 w-6 text-indigo-400" />
+            <h1 className="text-3xl font-bold text-white">Artists Collection</h1>
+          </div>
+          <div className="flex items-center space-x-2">
+            <SlidersHorizontal className="h-5 w-5 text-gray-400" />
+            <span className="text-gray-400">Min. Monthly Listeners:</span>
+            <select
+              value={minListeners}
+              onChange={(e) => setMinListeners(Number(e.target.value))}
+              className="bg-dark-card border border-dark-border text-white rounded-md px-3 py-1"
+            >
+              <option value={0}>All Artists</option>
+              <option value={100000}>100K+</option>
+              <option value={250000}>250K+</option>
+              <option value={500000}>500K+</option>
+              <option value={1000000}>1M+</option>
+            </select>
+          </div>
+        </div>
+        
+        <div className="mb-4 bg-dark-card rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center">
+            <Users className="h-5 w-5 text-yellow-400 mr-2" />
+            <span className="text-gray-300">
+              {artists.length} artists with {minListeners > 0 ? `${formatNumber(minListeners)}+` : 'any'} monthly listeners
+            </span>
+          </div>
+          <div className="text-gray-400 text-sm">
+            Sorted by popularity (monthly listeners)
+          </div>
         </div>
         
         {isLoading ? (
@@ -51,7 +82,7 @@ const ArtistsPage = () => {
           </div>
         ) : artists.length === 0 ? (
           <div className="text-center py-10 text-gray-400">
-            <p>No artists found in the database.</p>
+            <p>No artists found matching the current filter.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

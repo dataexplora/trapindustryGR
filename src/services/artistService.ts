@@ -62,14 +62,16 @@ export interface Genre {
 export const artistService = {
   /**
    * Get all artists from the database
+   * @param {number} minListeners - Minimum monthly listeners (defaults to 100000)
    */
-  getAllArtists: async (): Promise<ArtistWithImages[]> => {
+  getAllArtists: async (minListeners = 100000): Promise<ArtistWithImages[]> => {
     try {
       // Fetch artists from the database
       const { data: artists, error } = await supabase
         .from('artists')
         .select('*')
-        .order('name');
+        .gte('monthly_listeners', minListeners)
+        .order('monthly_listeners', { ascending: false });
       
       if (error) {
         console.error('Error fetching artists:', error);
