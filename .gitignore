@@ -27,3 +27,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Backend directory - don't include in GitHub repository
+/backend
