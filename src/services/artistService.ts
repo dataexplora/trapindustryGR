@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { cacheService } from '@/lib/cacheService';
 
 export interface Artist {
   id: string;
@@ -65,6 +66,14 @@ export const artistService = {
    * @param {number} minListeners - Minimum monthly listeners (defaults to 100000)
    */
   getAllArtists: async (minListeners = 100000): Promise<ArtistWithImages[]> => {
+    const cacheKey = `getAllArtists-${minListeners}`;
+    
+    // Try to get from cache first
+    const cachedData = cacheService.get<ArtistWithImages[]>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+    
     try {
       // Fetch artists from the database
       const { data: artists, error } = await supabase
@@ -126,6 +135,9 @@ export const artistService = {
         })
       );
 
+      // Cache the results
+      cacheService.set(cacheKey, artistsWithData);
+      
       return artistsWithData;
     } catch (error) {
       console.error('Error in getAllArtists:', error);
@@ -137,6 +149,14 @@ export const artistService = {
    * Get top artists by monthly listeners
    */
   getTopArtists: async (limit = 10): Promise<ArtistWithImages[]> => {
+    const cacheKey = `getTopArtists-${limit}`;
+    
+    // Try to get from cache first
+    const cachedData = cacheService.get<ArtistWithImages[]>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+    
     try {
       // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
@@ -163,7 +183,7 @@ export const artistService = {
         }
         
         // Fallback to hardcoded data when no artists are found
-        return [
+        const fallbackData = [
           {
             id: 'marzi-id',
             name: 'Marzi',
@@ -205,6 +225,10 @@ export const artistService = {
             }
           }
         ] as ArtistWithImages[];
+        
+        // Cache the fallback data with a shorter expiration (1 minute)
+        cacheService.set(cacheKey, fallbackData, 60 * 1000);
+        return fallbackData;
       }
 
       if (process.env.NODE_ENV === 'development') {
@@ -276,6 +300,9 @@ export const artistService = {
       if (process.env.NODE_ENV === 'development') {
         console.log(`Returning ${artistsWithData.length} artists with images and data`);
       }
+      
+      // Cache the results
+      cacheService.set(cacheKey, artistsWithData);
       
       return artistsWithData;
     } catch (error) {

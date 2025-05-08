@@ -1,33 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { ArtistWithImages, artistService } from '../services/artistService';
+import React, { useState, useMemo } from 'react';
 import Layout from '../components/Layout';
 import ArtistCard from '../components/ArtistCard';
-import { User, SlidersHorizontal, Users } from 'lucide-react';
+import { User, SlidersHorizontal, Users, Loader2 } from 'lucide-react';
 import { formatNumber } from '../utils/format';
+import { useData } from '@/context/DataContext';
 
 const ArtistsPage = () => {
-  const [artists, setArtists] = useState<ArtistWithImages[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { allArtists, isLoading, error, refreshData } = useData();
   const [minListeners, setMinListeners] = useState(100000); // Default minimum 100k
 
-  useEffect(() => {
-    const fetchArtists = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await artistService.getAllArtists(minListeners);
-        setArtists(data);
-      } catch (err) {
-        console.error('Error fetching artists:', err);
-        setError('Failed to load artists. Please try again later.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchArtists();
-  }, [minListeners]);
+  // Filter artists based on minListeners
+  const filteredArtists = useMemo(() => {
+    return allArtists.filter(artist => 
+      artist.monthly_listeners !== undefined && 
+      artist.monthly_listeners >= minListeners
+    );
+  }, [allArtists, minListeners]);
 
   return (
     <Layout>
@@ -58,7 +46,7 @@ const ArtistsPage = () => {
           <div className="flex items-center">
             <Users className="h-5 w-5 text-yellow-400 mr-2" />
             <span className="text-gray-300">
-              {artists.length} artists with {minListeners > 0 ? `${formatNumber(minListeners)}+` : 'any'} monthly listeners
+              {filteredArtists.length} artists with {minListeners > 0 ? `${formatNumber(minListeners)}+` : 'any'} monthly listeners
             </span>
           </div>
           <div className="text-gray-400 text-sm">
@@ -68,25 +56,28 @@ const ArtistsPage = () => {
         
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-pulse-subtle text-xl text-gray-300">Loading artists...</div>
+            <div className="flex items-center space-x-2 text-xl text-gray-300">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <span>Loading artists...</span>
+            </div>
           </div>
         ) : error ? (
           <div className="text-center py-10">
             <div className="text-red-500 mb-4">{error}</div>
             <button 
-              onClick={() => window.location.reload()}
+              onClick={() => refreshData()}
               className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white"
             >
               Try Again
             </button>
           </div>
-        ) : artists.length === 0 ? (
+        ) : filteredArtists.length === 0 ? (
           <div className="text-center py-10 text-gray-400">
             <p>No artists found matching the current filter.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {artists.map((artist, index) => (
+            {filteredArtists.map((artist, index) => (
               <ArtistCard key={artist.id} artist={artist} rank={index + 1} />
             ))}
           </div>

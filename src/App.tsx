@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { DataProvider } from "@/context/DataContext";
 import HomePage from "./pages/HomePage";
 import ArtistsPage from "./pages/ArtistsPage";
 import TopArtistsPage from "./pages/TopArtistsPage";
@@ -15,21 +16,23 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/artists" element={<ArtistsPage />} />
-          <Route path="/top-artists" element={<TopArtistsPage />} />
-          <Route path="/songs" element={<SongsPage />} />
-          <Route path="/artist/:id" element={<ArtistDetailPage />} />
-          <Route path="/db-explorer" element={<DbExplorer />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <DataProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/artists" element={<ArtistsPage />} />
+            <Route path="/top-artists" element={<TopArtistsPage />} />
+            <Route path="/songs" element={<SongsPage />} />
+            <Route path="/artist/:id" element={<ArtistDetailPage />} />
+            <Route path="/db-explorer" element={<DbExplorer />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </DataProvider>
   </QueryClientProvider>
 );
 

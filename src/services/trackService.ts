@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { cacheService } from '@/lib/cacheService';
 
 export interface Artist {
   id: string;
@@ -42,6 +43,14 @@ export const trackService = {
    * @returns Array of tracks sorted by play count
    */
   getMostStreamedTracks: async (limit = 50): Promise<Track[]> => {
+    const cacheKey = `getMostStreamedTracks-${limit}`;
+    
+    // Try to get from cache first
+    const cachedData = cacheService.get<Track[]>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+    
     try {
       if (process.env.NODE_ENV === 'development') {
         console.log(`Fetching top ${limit} tracks from database...`);
@@ -70,7 +79,7 @@ export const trackService = {
         }
         
         // Fallback to hardcoded tracks if none are found in the database
-        return [
+        const fallbackData = [
           {
             id: 'track1',
             name: 'Κριτική',
@@ -151,6 +160,10 @@ export const trackService = {
             }
           }
         ] as Track[];
+        
+        // Cache the fallback data with a shorter expiration (1 minute)
+        cacheService.set(cacheKey, fallbackData, 60 * 1000);
+        return fallbackData;
       }
       
       // Get track IDs for fetching artist relationships
@@ -379,6 +392,9 @@ export const trackService = {
           });
         }
       }
+      
+      // Cache the results
+      cacheService.set(cacheKey, tracksWithNames);
       
       return tracksWithNames;
     } catch (error) {

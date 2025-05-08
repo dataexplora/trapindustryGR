@@ -1,39 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Track, trackService } from '../services/trackService';
+import React from 'react';
 import Layout from '../components/Layout';
 import TrackRow from '../components/TrackRow';
-import { ListMusic, TrendingUp } from 'lucide-react';
+import { ListMusic, TrendingUp, Loader2 } from 'lucide-react';
+import { useData } from '@/context/DataContext';
 
 const SongsPage = () => {
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchMostStreamedTracks = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      console.log('Fetching top 50 tracks...');
-      const data = await trackService.getMostStreamedTracks(50);
-      
-      console.log(`Fetched ${data.length} tracks`);
-      if (data.length > 0) {
-        console.log('Sample track:', data[0]);
-      }
-      
-      setTracks(data);
-    } catch (err: any) {
-      console.error('Error fetching tracks:', err);
-      setError(`Failed to load tracks: ${err.message || 'Unknown error'}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMostStreamedTracks();
-  }, []);
+  const { allTracks: tracks, isLoading, error, refreshData } = useData();
 
   return (
     <Layout>
@@ -46,11 +18,20 @@ const SongsPage = () => {
         <div className="max-w-4xl mx-auto">
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
-              <div className="animate-pulse text-xl text-gray-300">Loading tracks...</div>
+              <div className="flex items-center space-x-2 text-xl text-gray-300">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span>Loading tracks...</span>
+              </div>
             </div>
           ) : error ? (
             <div className="bg-red-900/20 border border-red-900/50 rounded-lg p-4 text-center text-red-200">
-              {error}
+              <p>{error}</p>
+              <button 
+                onClick={() => refreshData()}
+                className="mt-4 px-4 py-2 bg-red-900/30 hover:bg-red-900/50 rounded-md text-red-200 text-sm"
+              >
+                Try Again
+              </button>
             </div>
           ) : tracks.length === 0 ? (
             <div className="bg-dark-card rounded-lg p-8 text-center">
