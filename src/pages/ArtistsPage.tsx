@@ -7,16 +7,11 @@ import { Button } from '@/components/ui/button';
 import { useDiscoverArtists } from '@/hooks/useDiscoverArtists';
 
 const ArtistsPage = () => {
-  const { allArtists, totalArtists, isLoading, error, refreshData } = useDiscoverArtists();
-  const [minListeners, setMinListeners] = useState(10000); // Lower minimum for emerging artists
-  const [maxListeners, setMaxListeners] = useState(250000); // Max cap for emerging artists
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc'); // Default to ascending (emerging first)
+  const { allArtists, totalArtists, isLoading, error } = useDiscoverArtists();
+  const [minListeners, setMinListeners] = useState(10000);
+  const [maxListeners, setMaxListeners] = useState(250000);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filterView, setFilterView] = useState<'all' | 'emerging' | 'rising'>('emerging');
-
-  // Ensure correct filters are applied immediately on component mount
-  React.useEffect(() => {
-    handleFilterChange('emerging');
-  }, []);
 
   // Filter artists while preserving their global ranks
   const filteredArtists = useMemo(() => {
@@ -113,26 +108,28 @@ const ArtistsPage = () => {
             </span>
           </div>
           
-          <div className="flex items-center">
-            <span className="text-gray-400 text-sm mr-2">Sort:</span>
-            <Button
-              variant="outline"
-              size="sm" 
-              className="h-8 border-gray-700 text-gray-300"
-              onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-            >
-              {sortDirection === 'asc' ? (
-                <div className="flex items-center">
-                  <ArrowUp className="h-3 w-3 mr-1" />
-                  <span>Emerging First</span>
-                </div>
-              ) : (
-                <div className="flex items-center">
-                  <ArrowUp className="h-3 w-3 mr-1 transform rotate-180" />
-                  <span>Popular First</span>
-                </div>
-              )}
-            </Button>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center">
+              <span className="text-gray-400 text-sm mr-2">Sort:</span>
+              <Button
+                variant="outline"
+                size="sm" 
+                className="h-8 border-gray-700 text-gray-300"
+                onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+              >
+                {sortDirection === 'asc' ? (
+                  <div className="flex items-center">
+                    <ArrowUp className="h-3 w-3 mr-1" />
+                    <span>Emerging First</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <ArrowUp className="h-3 w-3 mr-1 transform rotate-180" />
+                    <span>Popular First</span>
+                  </div>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
         
