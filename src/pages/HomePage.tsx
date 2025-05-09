@@ -19,9 +19,9 @@ const HomePage = () => {
     <Layout>
       <div className="bg-gradient-to-r from-indigo-900 to-purple-900 text-white py-16 px-4">
         <div className="container mx-auto text-center">
-          <h1 className="text-4xl font-bold mb-4">Ελληνική Μουσική Rankings</h1>
+          <h1 className="text-4xl font-bold mb-4">Urban Greek Scene</h1>
           <p className="text-xl max-w-2xl mx-auto">
-            Discover the most popular Greek artists and songs based on streaming data.
+            Discover the most popular urban Greek artists and songs shaping the culture today.
           </p>
         </div>
       </div>

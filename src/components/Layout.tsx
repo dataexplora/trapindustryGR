@@ -11,7 +11,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="container mx-auto px-4 flex justify-between items-center">
           <Link to="/" className="flex items-center space-x-2">
             <Music className="h-6 w-6" />
-            <h1 className="text-xl font-bold">Melodima Music</h1>
+            <h1 className="text-xl font-bold">Urban Greece</h1>
           </Link>
           <nav>
             <ul className="flex space-x-6">
@@ -47,7 +47,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       
       <footer className="bg-black text-white py-6">
         <div className="container mx-auto px-4 text-center">
-          <p>© 2025 Melodima Music</p>
+          <p>© 2025 Urban Greece</p>
           <p className="text-sm opacity-75 mt-1">Powered by Supabase</p>
         </div>
       </footer>
