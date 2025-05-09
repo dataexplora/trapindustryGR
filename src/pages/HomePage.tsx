@@ -70,9 +70,9 @@ const HomePage = () => {
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center">
                   <User className="mr-2 h-5 w-5 text-indigo-400" />
-                  <h2 className="text-2xl font-bold text-white">Top Artists</h2>
+                  <h2 className="text-2xl font-bold text-white">Hot Artists</h2>
                 </div>
-                <Link to="/top-artists">
+                <Link to="/hot-artists">
                   <Button variant="outline" className="border-indigo-800 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-900/50">
                     View All
                   </Button>

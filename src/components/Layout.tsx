@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Music, ListOrdered, User, TrendingUp } from 'lucide-react';
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
+export const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   
   return (
@@ -21,14 +21,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 </Link>
               </li>
               <li>
-                <Link to="/artists" className={`hover:text-white/80 transition-colors ${location.pathname === '/artists' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
-                  All Artists
+                <Link to="/discover" className={`hover:text-white/80 transition-colors ${location.pathname === '/discover' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
+                  Discover
                 </Link>
               </li>
               <li>
-                <Link to="/top-artists" className={`hover:text-white/80 transition-colors flex items-center ${location.pathname === '/top-artists' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
+                <Link to="/hot-artists" className={`hover:text-white/80 transition-colors flex items-center ${location.pathname === '/hot-artists' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
                   <TrendingUp className="h-4 w-4 mr-1" />
-                  Top Artists
+                  Hot Artists
                 </Link>
               </li>
               <li>

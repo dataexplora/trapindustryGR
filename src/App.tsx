@@ -23,8 +23,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/artists" element={<ArtistsPage />} />
-            <Route path="/top-artists" element={<TopArtistsPage />} />
+            <Route path="/discover" element={<ArtistsPage />} />
+            <Route path="/hot-artists" element={<TopArtistsPage />} />
             <Route path="/songs" element={<SongsPage />} />
             <Route path="/artist/:id" element={<ArtistDetailPage />} />
             <Route path="/db-explorer" element={<DbExplorer />} />

@@ -19,7 +19,7 @@ const TopArtistsPage = () => {
         setArtists(data);
       } catch (err) {
         console.error('Error fetching top artists:', err);
-        setError('Failed to load top artists. Please try again later.');
+        setError('Failed to load hot artists. Please try again later.');
       } finally {
         setIsLoading(false);
       }
@@ -34,7 +34,7 @@ const TopArtistsPage = () => {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center">
             <TrendingUp className="mr-2 h-6 w-6 text-indigo-400" />
-            <h1 className="text-3xl font-bold text-white">Top Artists</h1>
+            <h1 className="text-3xl font-bold text-white">Hot Artists</h1>
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-gray-400">Show:</span>
@@ -53,7 +53,7 @@ const TopArtistsPage = () => {
         
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-pulse-subtle text-xl text-gray-300">Loading top artists...</div>
+            <div className="animate-pulse-subtle text-xl text-gray-300">Loading hot artists...</div>
           </div>
         ) : error ? (
           <div className="text-center py-10">

@@ -1,56 +1,149 @@
 import React, { useState, useMemo } from 'react';
 import Layout from '../components/Layout';
 import ArtistCard from '../components/ArtistCard';
-import { User, SlidersHorizontal, Users, Loader2 } from 'lucide-react';
+import { User, SlidersHorizontal, Users, Loader2, Sparkles, Filter, Clock, ArrowUp, TrendingUp, Star } from 'lucide-react';
 import { formatNumber } from '../utils/format';
 import { useData } from '@/context/DataContext';
+import { Button } from '@/components/ui/button';
 
 const ArtistsPage = () => {
   const { allArtists, isLoading, error, refreshData } = useData();
-  const [minListeners, setMinListeners] = useState(100000); // Default minimum 100k
+  const [minListeners, setMinListeners] = useState(10000); // Lower minimum for emerging artists
+  const [maxListeners, setMaxListeners] = useState(250000); // Max cap for emerging artists
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc'); // Default to ascending (emerging first)
+  const [filterView, setFilterView] = useState<'all' | 'emerging' | 'rising'>('emerging');
 
-  // Filter artists based on minListeners
+  // Filter and sort artists
   const filteredArtists = useMemo(() => {
-    return allArtists.filter(artist => 
+    let filtered = allArtists.filter(artist => 
       artist.monthly_listeners !== undefined && 
       artist.monthly_listeners >= minListeners
     );
-  }, [allArtists, minListeners]);
+    
+    // Apply max listeners filter if viewing emerging artists
+    if (filterView !== 'all' && maxListeners) {
+      filtered = filtered.filter(artist => 
+        artist.monthly_listeners !== undefined && 
+        artist.monthly_listeners <= maxListeners
+      );
+    }
+    
+    // Sort by monthly_listeners
+    return [...filtered].sort((a, b) => {
+      const aValue = a.monthly_listeners || 0;
+      const bValue = b.monthly_listeners || 0;
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+    });
+  }, [allArtists, minListeners, maxListeners, sortDirection, filterView]);
+
+  const handleFilterChange = (view: 'all' | 'emerging' | 'rising') => {
+    setFilterView(view);
+    if (view === 'emerging') {
+      setMinListeners(10000);
+      setMaxListeners(250000);
+      setSortDirection('asc');
+    } else if (view === 'rising') {
+      setMinListeners(100000);
+      setMaxListeners(500000);
+      setSortDirection('asc');
+    } else {
+      setMinListeners(0);
+      setMaxListeners(Infinity);
+      setSortDirection('desc');
+    }
+  };
 
   return (
     <Layout>
-      <div className="container mx-auto py-12 px-4">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center">
-            <User className="mr-2 h-6 w-6 text-indigo-400" />
-            <h1 className="text-3xl font-bold text-white">Artists Collection</h1>
+      <div className="bg-gradient-to-r from-indigo-900 to-purple-900 text-white py-10 px-4">
+        <div className="container mx-auto">
+          <div className="flex items-center mb-4">
+            <Sparkles className="mr-3 h-7 w-7 text-yellow-400" />
+            <h1 className="text-4xl font-bold text-white">Discover</h1>
           </div>
-          <div className="flex items-center space-x-2">
-            <SlidersHorizontal className="h-5 w-5 text-gray-400" />
-            <span className="text-gray-400">Min. Monthly Listeners:</span>
-            <select
-              value={minListeners}
-              onChange={(e) => setMinListeners(Number(e.target.value))}
-              className="bg-dark-card border border-dark-border text-white rounded-md px-3 py-1"
+          <p className="text-lg max-w-3xl text-gray-200 mb-6">
+            Explore the vibrant Greek urban scene and discover the next big artists before they blow up.
+          </p>
+          
+          <div className="flex flex-wrap gap-2 mt-6">
+            <Button 
+              variant={filterView === 'emerging' ? "default" : "outline"} 
+              className={filterView === 'emerging' ? "bg-indigo-600 hover:bg-indigo-700" : "border-indigo-400 text-indigo-200"}
+              size="sm"
+              onClick={() => handleFilterChange('emerging')}
             >
-              <option value={0}>All Artists</option>
-              <option value={100000}>100K+</option>
-              <option value={250000}>250K+</option>
-              <option value={500000}>500K+</option>
-              <option value={1000000}>1M+</option>
-            </select>
+              <Star className="h-4 w-4 mr-1" />
+              Emerging Talent
+            </Button>
+            <Button 
+              variant={filterView === 'rising' ? "default" : "outline"} 
+              className={filterView === 'rising' ? "bg-indigo-600 hover:bg-indigo-700" : "border-indigo-400 text-indigo-200"}
+              size="sm"
+              onClick={() => handleFilterChange('rising')}
+            >
+              <TrendingUp className="h-4 w-4 mr-1" />
+              Rising Stars
+            </Button>
+            <Button 
+              variant={filterView === 'all' ? "default" : "outline"} 
+              className={filterView === 'all' ? "bg-indigo-600 hover:bg-indigo-700" : "border-indigo-400 text-indigo-200"}
+              size="sm"
+              onClick={() => handleFilterChange('all')}
+            >
+              <Users className="h-4 w-4 mr-1" />
+              All Artists
+            </Button>
           </div>
         </div>
-        
-        <div className="mb-4 bg-dark-card rounded-lg p-4 flex items-center justify-between">
+      </div>
+      
+      <div className="container mx-auto py-8 px-4">
+        <div className="mb-6 bg-dark-card rounded-lg p-4 flex items-center justify-between">
           <div className="flex items-center">
-            <Users className="h-5 w-5 text-yellow-400 mr-2" />
+            <Filter className="h-5 w-5 text-yellow-400 mr-2" />
             <span className="text-gray-300">
-              {filteredArtists.length} artists with {minListeners > 0 ? `${formatNumber(minListeners)}+` : 'any'} monthly listeners
+              {filteredArtists.length} artists {minListeners > 0 && `with ${formatNumber(minListeners)}+`}
+              {maxListeners < Infinity && ` to ${formatNumber(maxListeners)}`} monthly listeners
             </span>
           </div>
-          <div className="text-gray-400 text-sm">
-            Sorted by popularity (monthly listeners)
+          
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center">
+              <span className="text-gray-400 text-sm mr-2">Sort:</span>
+              <Button
+                variant="outline"
+                size="sm" 
+                className="h-8 border-gray-700 text-gray-300"
+                onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+              >
+                {sortDirection === 'asc' ? (
+                  <div className="flex items-center">
+                    <ArrowUp className="h-3 w-3 mr-1" />
+                    <span>Emerging First</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <ArrowUp className="h-3 w-3 mr-1 transform rotate-180" />
+                    <span>Popular First</span>
+                  </div>
+                )}
+              </Button>
+            </div>
+            
+            <div className="flex items-center">
+              <SlidersHorizontal className="h-4 w-4 text-gray-400 mr-1" />
+              <select
+                value={minListeners}
+                onChange={(e) => setMinListeners(Number(e.target.value))}
+                className="bg-dark-card border border-dark-border text-white rounded-md px-2 py-1 text-sm"
+              >
+                <option value={0}>No Min</option>
+                <option value={5000}>5K+</option>
+                <option value={10000}>10K+</option>
+                <option value={50000}>50K+</option>
+                <option value={100000}>100K+</option>
+              </select>
+            </div>
           </div>
         </div>
         
@@ -58,7 +151,7 @@ const ArtistsPage = () => {
           <div className="flex justify-center items-center h-64">
             <div className="flex items-center space-x-2 text-xl text-gray-300">
               <Loader2 className="h-6 w-6 animate-spin" />
-              <span>Loading artists...</span>
+              <span>Discovering artists...</span>
             </div>
           </div>
         ) : error ? (
@@ -76,11 +169,38 @@ const ArtistsPage = () => {
             <p>No artists found matching the current filter.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredArtists.map((artist, index) => (
-              <ArtistCard key={artist.id} artist={artist} rank={index + 1} />
-            ))}
-          </div>
+          <>
+            <div className="mb-8">
+              {filterView === 'emerging' && (
+                <div className="bg-gradient-to-r from-indigo-900/30 to-transparent p-4 rounded-lg mb-6 border border-indigo-800/50">
+                  <h2 className="text-lg font-medium text-indigo-300 mb-2 flex items-center">
+                    <Sparkles className="h-4 w-4 mr-2 text-yellow-400" />
+                    Emerging Talent Spotlight
+                  </h2>
+                  <p className="text-gray-300">
+                    Discover the next wave of Greek urban artists on the rise. These emerging talents represent the future of the scene.
+                  </p>
+                </div>
+              )}
+              {filterView === 'rising' && (
+                <div className="bg-gradient-to-r from-purple-900/30 to-transparent p-4 rounded-lg mb-6 border border-purple-800/50">
+                  <h2 className="text-lg font-medium text-purple-300 mb-2 flex items-center">
+                    <TrendingUp className="h-4 w-4 mr-2 text-yellow-400" />
+                    Rising Stars
+                  </h2>
+                  <p className="text-gray-300">
+                    These artists are making waves and building significant audiences. They're positioned to break into the mainstream soon.
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredArtists.map((artist, index) => (
+                <ArtistCard key={artist.id} artist={artist} />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </Layout>
