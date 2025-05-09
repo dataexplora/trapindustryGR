@@ -3,17 +3,22 @@ import Layout from '../components/Layout';
 import ArtistCard from '../components/ArtistCard';
 import { User, SlidersHorizontal, Users, Loader2, Sparkles, Filter, Clock, ArrowUp, TrendingUp, Star } from 'lucide-react';
 import { formatNumber } from '../utils/format';
-import { useData } from '@/context/DataContext';
 import { Button } from '@/components/ui/button';
+import { useDiscoverArtists } from '@/hooks/useDiscoverArtists';
 
 const ArtistsPage = () => {
-  const { allArtists, isLoading, error, refreshData } = useData();
+  const { allArtists, totalArtists, isLoading, error, refreshData } = useDiscoverArtists();
   const [minListeners, setMinListeners] = useState(10000); // Lower minimum for emerging artists
   const [maxListeners, setMaxListeners] = useState(250000); // Max cap for emerging artists
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc'); // Default to ascending (emerging first)
   const [filterView, setFilterView] = useState<'all' | 'emerging' | 'rising'>('emerging');
 
-  // Filter and sort artists
+  // Ensure correct filters are applied immediately on component mount
+  React.useEffect(() => {
+    handleFilterChange('emerging');
+  }, []);
+
+  // Filter artists while preserving their global ranks
   const filteredArtists = useMemo(() => {
     let filtered = allArtists.filter(artist => 
       artist.monthly_listeners !== undefined && 
@@ -28,7 +33,7 @@ const ArtistsPage = () => {
       );
     }
     
-    // Sort by monthly_listeners
+    // Sort by monthly_listeners but preserve original rank
     return [...filtered].sort((a, b) => {
       const aValue = a.monthly_listeners || 0;
       const bValue = b.monthly_listeners || 0;
@@ -39,7 +44,7 @@ const ArtistsPage = () => {
   const handleFilterChange = (view: 'all' | 'emerging' | 'rising') => {
     setFilterView(view);
     if (view === 'emerging') {
-      setMinListeners(10000);
+      setMinListeners(10000); // Explicitly set to 10k for emerging artists
       setMaxListeners(250000);
       setSortDirection('asc');
     } else if (view === 'rising') {
@@ -102,48 +107,32 @@ const ArtistsPage = () => {
           <div className="flex items-center">
             <Filter className="h-5 w-5 text-yellow-400 mr-2" />
             <span className="text-gray-300">
-              {filteredArtists.length} artists {minListeners > 0 && `with ${formatNumber(minListeners)}+`}
+              {filteredArtists.length} of {totalArtists} artists
+              {minListeners > 0 && ` with ${formatNumber(minListeners)}+`}
               {maxListeners < Infinity && ` to ${formatNumber(maxListeners)}`} monthly listeners
             </span>
           </div>
           
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center">
-              <span className="text-gray-400 text-sm mr-2">Sort:</span>
-              <Button
-                variant="outline"
-                size="sm" 
-                className="h-8 border-gray-700 text-gray-300"
-                onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-              >
-                {sortDirection === 'asc' ? (
-                  <div className="flex items-center">
-                    <ArrowUp className="h-3 w-3 mr-1" />
-                    <span>Emerging First</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center">
-                    <ArrowUp className="h-3 w-3 mr-1 transform rotate-180" />
-                    <span>Popular First</span>
-                  </div>
-                )}
-              </Button>
-            </div>
-            
-            <div className="flex items-center">
-              <SlidersHorizontal className="h-4 w-4 text-gray-400 mr-1" />
-              <select
-                value={minListeners}
-                onChange={(e) => setMinListeners(Number(e.target.value))}
-                className="bg-dark-card border border-dark-border text-white rounded-md px-2 py-1 text-sm"
-              >
-                <option value={0}>No Min</option>
-                <option value={5000}>5K+</option>
-                <option value={10000}>10K+</option>
-                <option value={50000}>50K+</option>
-                <option value={100000}>100K+</option>
-              </select>
-            </div>
+          <div className="flex items-center">
+            <span className="text-gray-400 text-sm mr-2">Sort:</span>
+            <Button
+              variant="outline"
+              size="sm" 
+              className="h-8 border-gray-700 text-gray-300"
+              onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+            >
+              {sortDirection === 'asc' ? (
+                <div className="flex items-center">
+                  <ArrowUp className="h-3 w-3 mr-1" />
+                  <span>Emerging First</span>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <ArrowUp className="h-3 w-3 mr-1 transform rotate-180" />
+                  <span>Popular First</span>
+                </div>
+              )}
+            </Button>
           </div>
         </div>
         
@@ -196,8 +185,14 @@ const ArtistsPage = () => {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {filteredArtists.map((artist, index) => (
-                <ArtistCard key={artist.id} artist={artist} />
+              {filteredArtists.map((artist) => (
+                <ArtistCard 
+                  key={artist.id} 
+                  artist={artist} 
+                  rank={artist.rank}
+                  // Always show rank since it's now global
+                  showRank={true}
+                />
               ))}
             </div>
           </>
