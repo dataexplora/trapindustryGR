@@ -388,7 +388,7 @@ export const artistService = {
   /**
    * Get artist's top tracks ordered by play count
    */
-  getArtistTopTracks: async (artistId: string, limit = 5): Promise<Track[]> => {
+  getArtistTopTracks: async (artistId: string, limit = 20): Promise<Track[]> => {
     try {
       // Fetch top tracks for the artist, ordered by play count
       const { data: topTracks, error: tracksError } = await supabase
