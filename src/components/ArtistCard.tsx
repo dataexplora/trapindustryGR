@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArtistWithImages } from '../services/artistService';
-import { Star, Music, User, Users, Headphones } from 'lucide-react';
+import { Check, Music, User, Users, Headphones } from 'lucide-react';
 import { formatNumber } from '../utils/format';
 
 interface ArtistCardProps {
@@ -50,7 +50,7 @@ const ArtistCard = ({ artist, rank, showRank = true }: ArtistCardProps) => {
           <img 
             src={avatarImage} 
             alt={artist.name} 
-            className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-56 object-cover transition-transform duration-500 group-hover:scale-105"
             onError={(e) => {
               // Only log error in development mode
               if (process.env.NODE_ENV === 'development') {
@@ -73,12 +73,6 @@ const ArtistCard = ({ artist, rank, showRank = true }: ArtistCardProps) => {
               <Users className="h-3 w-3 text-gray-400 mr-1" />
               <span className="text-gray-400 text-xs">{formatNumber(artist.followers || 0)} followers</span>
             </div>
-            {artist.verified && (
-              <div className="bg-indigo-900/30 text-indigo-400 rounded-full px-2 py-0.5 text-xs flex items-center">
-                <Star className="w-3 h-3 mr-1" />
-                Verified
-              </div>
-            )}
           </div>
         </div>
       </div>

@@ -1,11 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import TrackRow from '../components/TrackRow';
+import SpotifyPlayer from '../components/SpotifyPlayer';
 import { ListMusic, TrendingUp, Loader2 } from 'lucide-react';
 import { useData } from '@/context/DataContext';
 
 const SongsPage = () => {
   const { allTracks: tracks, isLoading, error, refreshData } = useData();
+  const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
+
+  // Function to handle track click
+  const handleTrackClick = (e: React.MouseEvent, trackId: string) => {
+    e.preventDefault(); // Prevent default link behavior
+    setSelectedTrack(trackId);
+  };
 
   return (
     <Layout>
@@ -17,7 +25,7 @@ const SongsPage = () => {
 
         <div className="max-w-4xl mx-auto">
           {isLoading ? (
-            <div className="flex justify-center items-center h-64">
+            <div className="flex justify-center items-center h-[32rem]">
               <div className="flex items-center space-x-2 text-xl text-gray-300">
                 <Loader2 className="h-6 w-6 animate-spin" />
                 <span>Loading tracks...</span>
@@ -46,13 +54,22 @@ const SongsPage = () => {
               </div>
               <div className="space-y-3">
                 {tracks.map((track, index) => (
-                  <TrackRow key={track.id} track={track} rank={index + 1} />
+                  <div key={track.id} onClick={(e) => handleTrackClick(e, track.id)}>
+                    <TrackRow track={track} rank={index + 1} />
+                  </div>
                 ))}
               </div>
             </>
           )}
         </div>
       </div>
+
+      {/* Spotify Player Modal */}
+      <SpotifyPlayer
+        trackId={selectedTrack || ''}
+        isOpen={!!selectedTrack}
+        onClose={() => setSelectedTrack(null)}
+      />
     </Layout>
   );
 };

@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArtistWithImages, artistService } from '../services/artistService';
 import Layout from '../components/Layout';
+import SpotifyPlayer from '../components/SpotifyPlayer';
 import { 
-  Star, Music, User, Users, ExternalLink, Calendar, Heart, 
+  Check, Music, User, Users, ExternalLink, Calendar, Heart, 
   Instagram, Twitter, Youtube, Facebook, Globe, Link2, Headphones,
-  Play, Clock, ChevronDown, ChevronUp, MapPin
+  Play, Clock, ChevronDown, ChevronUp, MapPin, Image
 } from 'lucide-react';
 import { formatNumber, formatDuration } from '../utils/format';
 
@@ -25,8 +26,10 @@ const ArtistDetailPage = () => {
   const [artist, setArtist] = useState<ArtistWithImages | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [topTracks, setTopTracks] = useState<any[]>([]);
+  const [displayedTracks, setDisplayedTracks] = useState(5);
   const [totalStreams, setTotalStreams] = useState<number>(0);
   const [showTopCities, setShowTopCities] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
   const topCitiesRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -75,6 +78,17 @@ const ArtistDetailPage = () => {
   // Toggle top cities dropdown
   const toggleTopCities = () => {
     setShowTopCities(!showTopCities);
+  };
+
+  // Function to handle track click
+  const handleTrackClick = (e: React.MouseEvent, trackId: string) => {
+    e.preventDefault(); // Prevent default link behavior
+    setSelectedTrack(trackId);
+  };
+
+  // Function to handle showing more tracks
+  const handleShowMore = () => {
+    setDisplayedTracks(prev => prev + 5);
   };
 
   if (isLoading) {
@@ -126,9 +140,8 @@ const ArtistDetailPage = () => {
                   <div className="flex items-center justify-center md:justify-start">
                     <h1 className="text-3xl font-bold text-white">{artist.name}</h1>
                     {artist.verified && (
-                      <div className="ml-3 bg-indigo-600 text-white rounded-full px-3 py-1 text-sm font-semibold flex items-center">
-                        <Star className="w-4 h-4 mr-1" />
-                        Verified
+                      <div className="ml-3 bg-[#1d9bf0] p-1 rounded-full flex items-center justify-center">
+                        <Check className="w-3 h-3 text-white" />
                       </div>
                     )}
                   </div>
@@ -278,13 +291,12 @@ const ArtistDetailPage = () => {
               <div className="col-span-1 text-right">Length</div>
             </div>
             
-            {topTracks.map((track, index) => (
+            {topTracks.slice(0, displayedTracks).map((track, index) => (
               <a 
                 key={track.id} 
                 href={track.share_url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="grid grid-cols-12 py-2 hover:bg-dark-muted rounded px-2 group"
+                onClick={(e) => handleTrackClick(e, track.id)}
+                className="grid grid-cols-12 py-2 hover:bg-dark-muted rounded px-2 group cursor-pointer"
               >
                 <div className="col-span-1 flex items-center text-gray-400">
                   <span className="group-hover:hidden">{index + 1}</span>
@@ -322,9 +334,27 @@ const ArtistDetailPage = () => {
                 </div>
               </a>
             ))}
+
+            {topTracks.length > 5 && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={handleShowMore}
+                  className="px-4 py-2 bg-[#1d1d1d] hover:bg-[#2d2d2d] text-gray-300 hover:text-white rounded-lg transition-colors duration-200 border border-[#333333] hover:border-[#444444] text-sm font-medium"
+                >
+                  Show More
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
+
+      {/* Spotify Player Modal */}
+      <SpotifyPlayer
+        trackId={selectedTrack || ''}
+        isOpen={!!selectedTrack}
+        onClose={() => setSelectedTrack(null)}
+      />
 
       <div className="container mx-auto py-8 px-4">
         <div className="flex items-center mb-6">

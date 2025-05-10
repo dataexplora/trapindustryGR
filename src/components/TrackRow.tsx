@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Track } from '../services/trackService';
-import { Music, ExternalLink, User, Disc } from 'lucide-react';
+import { Music, ExternalLink, User, Disc, Play } from 'lucide-react';
 import { formatNumber } from '../utils/format';
 
 interface TrackRowProps {
@@ -10,6 +10,7 @@ interface TrackRowProps {
 
 const TrackRow: React.FC<TrackRowProps> = ({ track, rank }) => {
   const [imageError, setImageError] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   
   // Format duration from milliseconds to mm:ss
   const formatDuration = (ms: number = 0) => {
@@ -61,15 +62,19 @@ const TrackRow: React.FC<TrackRowProps> = ({ track, rank }) => {
   }
 
   return (
-    <div className="flex items-center p-4 bg-dark-card rounded-xl border border-dark-border hover:bg-dark-card-hover transition-all duration-200">
+    <div 
+      className="flex items-center p-4 bg-dark-card rounded-xl border border-dark-border hover:bg-dark-card-hover transition-all duration-200 cursor-pointer group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {/* Rank */}
       <div className={`mr-4 ${getRankBadgeStyle()} rounded-full w-8 h-8 flex items-center justify-center font-bold shrink-0`}>
-        {rank}
+        {isHovered ? <Play className="w-4 h-4" /> : rank}
       </div>
       
       {/* Album Cover */}
       {track.album_image?.url && !imageError ? (
-        <div className="mr-4 w-12 h-12 rounded-md overflow-hidden shadow-md shrink-0">
+        <div className="mr-4 w-12 h-12 rounded-md overflow-hidden shadow-md shrink-0 relative">
           <img 
             src={track.album_image.url} 
             alt={`Cover for ${track.album_name || track.name}`}
@@ -85,15 +90,20 @@ const TrackRow: React.FC<TrackRowProps> = ({ track, rank }) => {
               target.onerror = null; // Prevent infinite loops
             }}
           />
+          {isHovered && (
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              <Play className="w-6 h-6 text-white" />
+            </div>
+          )}
         </div>
       ) : (
         <div className="mr-4 w-12 h-12 rounded-md overflow-hidden shadow-md shrink-0 bg-indigo-900/50 flex items-center justify-center">
-          <Music className="h-6 w-6 text-indigo-400" />
+          {isHovered ? <Play className="h-6 w-6 text-white" /> : <Music className="h-6 w-6 text-indigo-400" />}
         </div>
       )}
       
       {/* Track Info */}
-      <div className="flex-grow">
+      <div className="flex-grow min-w-0">
         <div className="flex items-center">
           <h3 className="font-semibold text-white truncate">{track.name || 'Untitled Track'}</h3>
           {track.explicit && (
@@ -104,7 +114,7 @@ const TrackRow: React.FC<TrackRowProps> = ({ track, rank }) => {
         {/* Artist */}
         <div className="flex items-center text-sm text-gray-400 mt-1">
           <User className="h-3 w-3 mr-1 text-indigo-400" />
-          <span className="text-indigo-200 font-medium">
+          <span className="text-indigo-200 font-medium truncate">
             {getArtistDisplay()}
           </span>
         </div>
@@ -132,6 +142,7 @@ const TrackRow: React.FC<TrackRowProps> = ({ track, rank }) => {
               target="_blank" 
               rel="noopener noreferrer"
               className="ml-2 text-gray-400 hover:text-indigo-400 transition-all"
+              onClick={(e) => e.stopPropagation()} // Prevent triggering the parent click
             >
               <ExternalLink className="h-3 w-3" />
             </a>

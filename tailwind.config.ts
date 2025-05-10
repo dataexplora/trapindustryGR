@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -115,7 +114,10 @@ export default {
 				'music-bar-1': 'music-bar 1.2s ease-in-out infinite',
 				'music-bar-2': 'music-bar 1.6s ease-in-out infinite',
 				'music-bar-3': 'music-bar 1.4s ease-in-out infinite'
-			}
+			},
+			height: {
+				'64': '32rem',
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
