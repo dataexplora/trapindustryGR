@@ -290,19 +290,34 @@ const ArtistDetailPage = () => {
                   <span className="group-hover:hidden">{index + 1}</span>
                   <Play className="w-4 h-4 hidden group-hover:block text-white" />
                 </div>
-                <div className="col-span-6 md:col-span-5 font-medium text-white truncate">
-                  {track.name}
-                  {track.explicit && (
-                    <span className="ml-2 text-xs bg-gray-600 text-gray-300 px-1 rounded">E</span>
+                <div className="col-span-6 md:col-span-5 flex items-center">
+                  {track.album?.image ? (
+                    <img 
+                      src={track.album.image.url} 
+                      alt={track.album.name || 'Album cover'} 
+                      className="w-10 h-10 rounded mr-3 object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded mr-3 bg-dark-muted flex items-center justify-center">
+                      <Music className="w-5 h-5 text-gray-600" />
+                    </div>
                   )}
+                  <div>
+                    <div className="font-medium text-white truncate">
+                      {track.name}
+                      {track.explicit && (
+                        <span className="ml-2 text-xs bg-gray-600 text-gray-300 px-1 rounded">E</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="hidden md:block md:col-span-3 text-gray-400 truncate">
+                <div className="hidden md:block md:col-span-3 text-gray-400 truncate self-center">
                   {track.album?.name || '—'}
                 </div>
-                <div className="col-span-4 md:col-span-2 text-right text-gray-400">
+                <div className="col-span-4 md:col-span-2 text-right text-gray-400 self-center">
                   {formatNumber(track.play_count || 0)}
                 </div>
-                <div className="col-span-1 text-right text-gray-400">
+                <div className="col-span-1 text-right text-gray-400 self-center">
                   {formatDuration(track.duration_ms || 0)}
                 </div>
               </a>

@@ -426,17 +426,25 @@ export const artistService = {
         .sort((a, b) => (b.play_count || 0) - (a.play_count || 0))
         .slice(0, limit);
 
-      // Fetch album details for each track
+      // Fetch album details and artwork for each track
       const tracksWithAlbums = await Promise.all(
         tracks.map(async (track) => {
           if (!track.album_id) {
             return track;
           }
 
-          // Get album name
+          // Get album name and artwork
           const { data: album, error: albumError } = await supabase
             .from('albums')
-            .select('id, name')
+            .select(`
+              id, 
+              name,
+              album_images (
+                url,
+                width,
+                height
+              )
+            `)
             .eq('id', track.album_id)
             .single();
 
@@ -445,9 +453,21 @@ export const artistService = {
             return track;
           }
 
+          // Get the largest album image
+          const albumImage = album?.album_images?.length > 0
+            ? album.album_images.reduce((largest, current) => {
+                const currentSize = (current.width || 0) * (current.height || 0);
+                const largestSize = (largest.width || 0) * (largest.height || 0);
+                return currentSize > largestSize ? current : largest;
+              })
+            : undefined;
+
           return {
             ...track,
-            album: album || undefined
+            album: {
+              ...album,
+              image: albumImage
+            }
           };
         })
       );
