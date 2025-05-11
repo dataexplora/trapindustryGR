@@ -1,5 +1,30 @@
 # https://www.robotstxt.org/robotstxt.html
+# Global rules
 User-agent: *
+Allow: /
+
+# Google
+User-agent: Googlebot
+Allow: /
+User-agent: Googlebot-Image
+Allow: /
+User-agent: Googlebot-Mobile
+Allow: /
+User-agent: Googlebot-News
+Allow: /
+
+# Bing
+User-agent: Bingbot
+Allow: /
+User-agent: MSNBot
+Allow: /
+
+# DuckDuckGo
+User-agent: DuckDuckBot
+Allow: /
+
+# Yandex
+User-agent: Yandex
 Allow: /
 
 # Sitemap location
@@ -12,9 +37,16 @@ Disallow: /error
 # Allow crawling of all content
 Allow: /discover
 Allow: /hot-artists
-Allow: /songs
+Allow: /songs/*
 Allow: /artist/*
 Allow: /about
 Allow: /privacy
 Allow: /terms
 Allow: /contact
+
+# Crawl-delay (optional, in seconds)
+Crawl-delay: 1
+
+# Additional directives
+Request-rate: 1/1 # Maximum rate of 1 request per second
+Visit-time: 0600-2300 # Allow crawling between 6 AM and 11 PM server time
