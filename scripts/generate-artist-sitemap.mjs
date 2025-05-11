@@ -15,17 +15,19 @@ async function generateArtistSitemap() {
     // Fetch all artists from Supabase
     const { data: artists, error } = await supabase
       .from('artists')
-      .select('id, updated_at')
+      .select('id')
       .order('monthly_listeners', { ascending: false });
 
     if (error) throw error;
+
+    const currentDate = new Date().toISOString();
 
     // Generate XML content
     const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${artists.map(artist => `  <url>
     <loc>https://urbangreece.com/artist/${artist.id}</loc>
-    <lastmod>${new Date(artist.updated_at).toISOString()}</lastmod>
+    <lastmod>${currentDate}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>`).join('\n')}

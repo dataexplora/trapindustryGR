@@ -15,17 +15,19 @@ async function generateTracksSitemap() {
     // Fetch all tracks from Supabase
     const { data: tracks, error } = await supabase
       .from('tracks')
-      .select('id, updated_at')
+      .select('id')
       .order('play_count', { ascending: false });
 
     if (error) throw error;
+
+    const currentDate = new Date().toISOString();
 
     // Generate XML content
     const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${tracks.map(track => `  <url>
     <loc>https://urbangreece.com/track/${track.id}</loc>
-    <lastmod>${new Date(track.updated_at).toISOString()}</lastmod>
+    <lastmod>${currentDate}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>`).join('\n')}
