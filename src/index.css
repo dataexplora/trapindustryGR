@@ -105,27 +105,28 @@ button:focus-visible {
 }
 
 /* Custom reCAPTCHA Styling */
-.g-recaptcha {
-  transform-origin: center;
-  -webkit-transform-origin: center;
-  padding: 8px;
+.g-recaptcha-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 78px;  /* Standard reCAPTCHA height */
+  width: 100%;
   background: rgba(32, 32, 40, 0.6);
   border-radius: 6px;
   backdrop-filter: blur(8px);
   box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(139, 92, 246, 0.1);
   transition: all 0.3s ease;
-  transform: scale(0.85);
-  margin: -8px 0;  /* Compensate for scale */
+  padding: 8px;
 }
 
-.g-recaptcha:hover {
+.g-recaptcha-container:hover {
   background: rgba(32, 32, 40, 0.8);
   border-color: rgba(139, 92, 246, 0.2);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Ensure iframe inherits border radius */
-.g-recaptcha iframe {
+.g-recaptcha-container iframe {
   border-radius: 3px;
 }

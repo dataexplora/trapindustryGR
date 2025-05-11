@@ -106,7 +106,7 @@ const ArtistDetailPage = () => {
       <Layout>
         <div className="container mx-auto py-8 px-4 text-center">
           <h2 className="text-2xl text-white">Artist not found</h2>
-          <Link to="/artists" className="text-indigo-400 hover:underline mt-4 inline-block">
+          <Link to="/discover" className="text-indigo-400 hover:underline mt-4 inline-block">
             Return to Artists
           </Link>
         </div>

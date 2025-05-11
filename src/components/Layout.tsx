@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Music, ListOrdered, User, TrendingUp, Instagram, Twitter, Youtube } from 'lucide-react';
+import { TrendingUp, Instagram, Twitter, Youtube, Menu, X } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 declare global {
@@ -15,19 +15,42 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   const [showCaptcha, setShowCaptcha] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const recaptchaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Load reCAPTCHA script
     const script = document.createElement('script');
-    script.src = 'https://www.google.com/recaptcha/api.js';
+    script.src = 'https://www.google.com/recaptcha/api.js?render=explicit';
     script.async = true;
-    document.body.appendChild(script);
+    script.defer = true;
+    
+    script.onload = () => {
+      // Initialize reCAPTCHA after script loads
+      if (window.grecaptcha && recaptchaRef.current) {
+        window.grecaptcha.ready(() => {
+          window.grecaptcha.render(recaptchaRef.current, {
+            sitekey: import.meta.env.VITE_RECAPTCHA_SITE_KEY,
+            theme: 'dark',
+            size: 'normal'
+          });
+        });
+      }
+    };
+    
+    document.head.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      // Clean up script tag
+      const scripts = document.head.getElementsByTagName('script');
+      for (let i = 0; i < scripts.length; i++) {
+        if (scripts[i].src.includes('recaptcha')) {
+          document.head.removeChild(scripts[i]);
+          break;
+        }
+      }
     };
-  }, []);
+  }, [showCaptcha]); // Only reload when showCaptcha changes
 
   const validateEmail = (email: string): boolean => {
     // More comprehensive email validation
@@ -43,12 +66,13 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const handleInitialSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowCaptcha(true);
     if (!validateEmail(email)) {
       setErrorMessage('Please enter a valid email address');
       setSubscriptionStatus('error');
       return;
     }
-    setShowCaptcha(true);
+    
   };
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
@@ -96,38 +120,105 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-dark-background">
-      <header className="bg-gradient-to-r from-indigo-900 to-purple-900 text-white py-4 shadow-lg">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <Link to="/" className="flex items-center space-x-2">
-            <Music className="h-6 w-6" />
-            <h1 className="text-xl font-bold">Urban Greece</h1>
-          </Link>
-          <nav>
-            <ul className="flex space-x-6">
-              <li>
-                <Link to="/" className={`hover:text-white/80 transition-colors ${location.pathname === '/' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link to="/discover" className={`hover:text-white/80 transition-colors ${location.pathname === '/discover' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
-                  Discover
-                </Link>
-              </li>
-              <li>
-                <Link to="/hot-artists" className={`hover:text-white/80 transition-colors flex items-center ${location.pathname === '/hot-artists' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  Hot Artists
-                </Link>
-              </li>
-              <li>
-                <Link to="/songs" className={`hover:text-white/80 transition-colors ${location.pathname === '/songs' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
-                  Songs
-                </Link>
-              </li>
-            </ul>
-          </nav>
+    <div className="flex flex-col min-h-screen">
+      <header className="bg-gradient-to-r from-indigo-900 to-purple-900 text-white py-7 shadow-lg relative">
+        <div className="container mx-auto px-4">
+          {/* Mobile Menu Button */}
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="absolute right-4 lg:hidden z-50"
+          >
+            {isMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
+
+          {/* Logo - Centered on mobile, left-aligned on desktop */}
+          <div className="flex justify-center lg:justify-between items-center">
+            <Link to="/" className="flex items-center">
+              <img 
+                src="/assets/images/logo.png" 
+                alt="Urban Greece Logo" 
+                className="h-8 lg:pl-8 lg:mt-3 w-auto transition-transform duration-200 hover:scale-105"
+              />
+            </Link>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden mr-6 lg:block">
+              <ul className="flex space-x-6">
+                <li>
+                  <Link to="/" className={`hover:text-white/80 transition-colors ${location.pathname === '/' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/discover" className={`hover:text-white/80 transition-colors ${location.pathname === '/discover' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
+                    Discover
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/hot-artists" className={`hover:text-white/80 transition-colors flex items-center ${location.pathname === '/hot-artists' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                    Hot Artists
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/songs" className={`hover:text-white/80 transition-colors ${location.pathname === '/songs' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
+                    Songs
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+          </div>
+
+          {/* Mobile Navigation Menu */}
+          {isMenuOpen && (
+            <nav className="fixed inset-0 bg-gradient-to-r from-indigo-900/95 to-purple-900/95 backdrop-blur-sm lg:hidden z-40">
+              <div className="h-full flex items-center justify-center">
+                <ul className="flex flex-col space-y-8 text-center">
+                  <li>
+                    <Link 
+                      to="/" 
+                      className={`text-2xl font-medium ${location.pathname === '/' ? 'text-white' : 'text-white/70'}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Home
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      to="/discover" 
+                      className={`text-2xl font-medium ${location.pathname === '/discover' ? 'text-white' : 'text-white/70'}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Discover
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      to="/hot-artists" 
+                      className={`text-2xl font-medium flex items-center justify-center ${location.pathname === '/hot-artists' ? 'text-white' : 'text-white/70'}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <TrendingUp className="h-5 w-5 mr-2" />
+                      Hot Artists
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      to="/songs" 
+                      className={`text-2xl font-medium ${location.pathname === '/songs' ? 'text-white' : 'text-white/70'}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Songs
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </nav>
+          )}
         </div>
       </header>
       
@@ -141,7 +232,11 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
             {/* About Section */}
             <div className="text-center md:text-left">
               <div className="flex items-center justify-center md:justify-start mb-4">
-                <Music className="h-6 w-6 mr-2" />
+                <img 
+                  src="/assets/images/icon.png" 
+                  alt="Urban Greece Logo" 
+                  className="h-12 w-auto mr-2"
+                />
                 <h3 className="text-xl font-bold">Urban Greece</h3>
               </div>
               <p className="text-gray-400 text-sm mb-4">
@@ -208,13 +303,10 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 )}
                 {/* reCAPTCHA */}
                 {showCaptcha && (
-                  <div className="flex justify-center mt-2">
+                  <div className="flex justify-center mt-4">
                     <div 
                       ref={recaptchaRef}
-                      className="g-recaptcha" 
-                      data-sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-                      data-theme="dark"
-                      data-size="compact"
+                      className="g-recaptcha-container"
                     />
                   </div>
                 )}
