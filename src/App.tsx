@@ -9,7 +9,6 @@ import ArtistsPage from "./pages/ArtistsPage";
 import TopArtistsPage from "./pages/TopArtistsPage";
 import SongsPage from "./pages/SongsPage";
 import ArtistDetailPage from "./pages/ArtistDetailPage";
-import DbExplorer from "./pages/DbExplorer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,7 +26,6 @@ const App = () => (
             <Route path="/hot-artists" element={<TopArtistsPage />} />
             <Route path="/songs" element={<SongsPage />} />
             <Route path="/artist/:id" element={<ArtistDetailPage />} />
-            <Route path="/db-explorer" element={<DbExplorer />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
