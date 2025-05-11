@@ -30,3 +30,4 @@ dist-ssr
 
 # Backend directory - don't include in GitHub repository
 /backend
+/assets

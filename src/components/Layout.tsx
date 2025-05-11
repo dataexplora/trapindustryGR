@@ -126,7 +126,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           {/* Mobile Menu Button */}
           <button 
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="absolute right-4 lg:hidden z-50"
+            className="absolute right-4 lg:hidden z-50 p-1 bg-transparent focus:outline-none"
           >
             {isMenuOpen ? (
               <X className="h-6 w-6" />
