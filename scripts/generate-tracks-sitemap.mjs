@@ -6,8 +6,8 @@ dotenv.config();
 
 // Initialize Supabase client
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.VITE_SUPABASE_URL,
+  process.env.VITE_SUPABASE_ANON_KEY
 );
 
 async function generateTracksSitemap() {
@@ -37,6 +37,7 @@ ${tracks.map(track => `  <url>
 
   } catch (error) {
     console.error('Error generating tracks sitemap:', error);
+    process.exit(1); // Exit with error code if something goes wrong
   }
 }
 
