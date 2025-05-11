@@ -6,7 +6,7 @@ import SpotifyPlayer from '../components/SpotifyPlayer';
 import { 
   Check, Music, User, Users, ExternalLink, Calendar, Heart, 
   Instagram, Twitter, Youtube, Facebook, Globe, Link2, Headphones,
-  Play, Clock, ChevronDown, ChevronUp, MapPin, Image
+  Play, Clock, ChevronDown, ChevronUp, MapPin, Image, Star
 } from 'lucide-react';
 import { formatNumber, formatDuration } from '../utils/format';
 
@@ -21,6 +21,28 @@ const getSocialIcon = (name: string) => {
   return <Link2 className="w-4 h-4" />;
 };
 
+// Helper to clean up biography text
+const cleanBiography = (text: string): string => {
+  // Create a temporary div to parse HTML content
+  const div = document.createElement('div');
+  div.innerHTML = text;
+
+  // Find all anchor tags
+  const links = div.getElementsByTagName('a');
+
+  // Replace each link with its data-name attribute value or remove it
+  Array.from(links).forEach(link => {
+    const name = link.getAttribute('data-name');
+    if (name) {
+      link.replaceWith(name);
+    } else {
+      link.replaceWith(link.textContent || '');
+    }
+  });
+
+  return div.textContent || text;
+};
+
 const ArtistDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const [artist, setArtist] = useState<ArtistWithImages | null>(null);
@@ -30,6 +52,7 @@ const ArtistDetailPage = () => {
   const [totalStreams, setTotalStreams] = useState<number>(0);
   const [showTopCities, setShowTopCities] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
+  const [isExpandedBio, setIsExpandedBio] = useState(false);
   const topCitiesRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -106,7 +129,7 @@ const ArtistDetailPage = () => {
       <Layout>
         <div className="container mx-auto py-8 px-4 text-center">
           <h2 className="text-2xl text-white">Artist not found</h2>
-          <Link to="/discover" className="text-indigo-400 hover:underline mt-4 inline-block">
+          <Link to="/" className="text-indigo-400 hover:underline mt-4 inline-block">
             Return to Artists
           </Link>
         </div>
@@ -164,9 +187,31 @@ const ArtistDetailPage = () => {
                     </div>
                   )}
 
+                  {/* Biography with Show More/Less */}
                   {artist.biography && (
                     <div className="mt-4 text-gray-300 max-w-2xl">
-                      <p>{artist.biography.length > 200 ? `${artist.biography.substring(0, 200)}...` : artist.biography}</p>
+                      <p>
+                        {isExpandedBio 
+                          ? cleanBiography(artist.biography)
+                          : cleanBiography(artist.biography).substring(0, 200)}
+                        {artist.biography.length > 200 && !isExpandedBio && '...'}
+                      </p>
+                      {artist.biography.length > 200 && (
+                        <button
+                          onClick={() => setIsExpandedBio(!isExpandedBio)}
+                          className="mt-2 text-indigo-400 hover:text-indigo-300 transition-colors text-sm font-medium flex items-center"
+                        >
+                          {isExpandedBio ? (
+                            <>
+                              Show Less <ChevronUp className="w-4 h-4 ml-1" />
+                            </>
+                          ) : (
+                            <>
+                              Show More <ChevronDown className="w-4 h-4 ml-1" />
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
                   )}
 

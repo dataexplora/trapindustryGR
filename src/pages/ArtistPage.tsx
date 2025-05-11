@@ -31,6 +31,8 @@ export const ArtistPage = () => {
   const { id } = useParams();
   const [artist, setArtist] = useState<Artist | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const MAX_BIO_LENGTH = 300; // Show first 300 characters initially
 
   useEffect(() => {
     const fetchArtist = async () => {
@@ -124,6 +126,9 @@ export const ArtistPage = () => {
     'greek urban music'
   ];
 
+  const shouldShowButton = artist.bio.length > MAX_BIO_LENGTH;
+  const displayedBio = isExpanded ? artist.bio : artist.bio.slice(0, MAX_BIO_LENGTH);
+
   return (
     <>
       <SEO
@@ -155,7 +160,23 @@ export const ArtistPage = () => {
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold mb-4">{artist.name}</h1>
         <img src={artist.image_url} alt={artist.name} className="w-full max-w-2xl rounded-lg shadow-lg mb-6" />
-        <p className="text-gray-300 mb-4">{artist.bio}</p>
+        
+        {/* Bio section with show more/less */}
+        <div className="mb-6">
+          <p className="text-gray-300">
+            {isExpanded ? artist.bio : artist.bio.slice(0, MAX_BIO_LENGTH)}
+            {!isExpanded && shouldShowButton && '...'}
+          </p>
+          {shouldShowButton && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="mt-2 text-purple-400 hover:text-purple-300 transition-colors duration-200 text-sm font-medium"
+            >
+              {isExpanded ? 'Show Less' : 'Show More'}
+            </button>
+          )}
+        </div>
+
         <div className="mb-4">
           <h2 className="text-2xl font-semibold mb-2">Monthly Listeners</h2>
           <p className="text-xl">{artist.monthly_listeners.toLocaleString()}</p>
@@ -173,4 +194,4 @@ export const ArtistPage = () => {
       </div>
     </>
   );
-}; 
+};
