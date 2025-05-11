@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && node scripts/generate-sitemaps.mjs && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "start": "node index.js",
-    "import": "node import-artist-data.js"
+    "import": "node import-artist-data.js",
+    "generate-sitemaps": "node scripts/generate-sitemaps.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

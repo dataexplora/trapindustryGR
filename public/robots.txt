@@ -1,14 +1,20 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
+# https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
+
+# Sitemap location
+Sitemap: https://urbangreece.com/sitemap-index.xml
+
+# Prevent crawling of error pages
+Disallow: /404
+Disallow: /error
+
+# Allow crawling of all content
+Allow: /discover
+Allow: /hot-artists
+Allow: /songs
+Allow: /artist/*
+Allow: /about
+Allow: /privacy
+Allow: /terms
+Allow: /contact
