@@ -162,9 +162,8 @@ const SongsPage = () => {
     'popular greek songs'
   ];
 
-  // Function to handle track click
-  const handleTrackClick = (e: React.MouseEvent, trackId: string) => {
-    e.preventDefault(); // Prevent default link behavior
+  // Function to handle playing a track
+  const handlePlayTrack = (trackId: string) => {
     setSelectedTrack(trackId);
   };
 
@@ -221,8 +220,12 @@ const SongsPage = () => {
                 </div>
                 <div className="space-y-3">
                   {tracks.map((track, index) => (
-                    <div key={track.id} onClick={(e) => handleTrackClick(e, track.id)}>
-                      <TrackRow track={track} rank={index + 1} />
+                    <div key={track.id}>
+                      <TrackRow 
+                        track={track} 
+                        rank={index + 1} 
+                        onPlay={handlePlayTrack}
+                      />
                     </div>
                   ))}
                 </div>

@@ -1,0 +1,10 @@
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer-when-downgrade
+
+/favicon.ico
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.png
+  Cache-Control: public, max-age=0, must-revalidate 

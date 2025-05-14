@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Track } from '../services/trackService';
 import { Music, ExternalLink, User, Disc, Play } from 'lucide-react';
 import { formatNumber } from '../utils/format';
@@ -6,9 +7,10 @@ import { formatNumber } from '../utils/format';
 interface TrackRowProps {
   track: Track;
   rank: number;
+  onPlay?: (trackId: string) => void;
 }
 
-const TrackRow: React.FC<TrackRowProps> = ({ track, rank }) => {
+const TrackRow: React.FC<TrackRowProps> = ({ track, rank, onPlay }) => {
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   
@@ -50,6 +52,13 @@ const TrackRow: React.FC<TrackRowProps> = ({ track, rank }) => {
     }
   };
 
+  const handlePlay = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigation
+    if (onPlay) {
+      onPlay(track.id);
+    }
+  };
+
   // Log the track data (in development only)
   if (process.env.NODE_ENV === 'development') {
     console.log(`Rendering TrackRow for ${track.name}`, {
@@ -62,94 +71,99 @@ const TrackRow: React.FC<TrackRowProps> = ({ track, rank }) => {
   }
 
   return (
-    <div 
-      className="flex items-center p-4 bg-dark-card rounded-xl border border-dark-border hover:bg-dark-card-hover transition-all duration-200 cursor-pointer group"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Rank */}
-      <div className={`mr-4 ${getRankBadgeStyle()} rounded-full w-8 h-8 flex items-center justify-center font-bold shrink-0`}>
-        {isHovered ? <Play className="w-4 h-4" /> : rank}
-      </div>
-      
-      {/* Album Cover */}
-      {track.album_image?.url && !imageError ? (
-        <div className="mr-4 w-12 h-12 rounded-md overflow-hidden shadow-md shrink-0 relative">
-          <img 
-            src={track.album_image.url} 
-            alt={`Cover for ${track.album_name || track.name}`}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              if (process.env.NODE_ENV === 'development') {
-                console.error(`Failed to load album image for track ${track.name}`, {
-                  attempted_url: track.album_image?.url
-                });
-              }
-              setImageError(true);
-              const target = e.target as HTMLImageElement;
-              target.onerror = null; // Prevent infinite loops
-            }}
-          />
-          {isHovered && (
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-              <Play className="w-6 h-6 text-white" />
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="mr-4 w-12 h-12 rounded-md overflow-hidden shadow-md shrink-0 bg-indigo-900/50 flex items-center justify-center">
-          {isHovered ? <Play className="h-6 w-6 text-white" /> : <Music className="h-6 w-6 text-indigo-400" />}
-        </div>
-      )}
-      
-      {/* Track Info */}
-      <div className="flex-grow min-w-0">
-        <div className="flex items-center">
-          <h3 className="font-semibold text-white truncate">{track.name || 'Untitled Track'}</h3>
-          {track.explicit && (
-            <span className="ml-2 px-1.5 py-0.5 text-xs bg-gray-700 text-gray-300 rounded">E</span>
-          )}
+    <Link to={`/track/${track.id}`} className="block">
+      <div 
+        className="flex items-center p-4 bg-dark-card rounded-xl border border-dark-border hover:bg-dark-card-hover transition-all duration-200 cursor-pointer group"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Rank */}
+        <div 
+          className={`mr-4 ${getRankBadgeStyle()} rounded-full w-8 h-8 flex items-center justify-center font-bold shrink-0 cursor-pointer`}
+          onClick={handlePlay}
+        >
+          {isHovered ? <Play className="w-4 h-4" /> : rank}
         </div>
         
-        {/* Artist */}
-        <div className="flex items-center text-sm text-gray-400 mt-1">
-          <User className="h-3 w-3 mr-1 text-indigo-400" />
-          <span className="text-indigo-200 font-medium truncate">
-            {getArtistDisplay()}
-          </span>
+        {/* Album Cover */}
+        {track.album_image?.url && !imageError ? (
+          <div className="mr-4 w-12 h-12 rounded-md overflow-hidden shadow-md shrink-0 relative">
+            <img 
+              src={track.album_image.url} 
+              alt={`Cover for ${track.album_name || track.name}`}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                if (process.env.NODE_ENV === 'development') {
+                  console.error(`Failed to load album image for track ${track.name}`, {
+                    attempted_url: track.album_image?.url
+                  });
+                }
+                setImageError(true);
+                const target = e.target as HTMLImageElement;
+                target.onerror = null; // Prevent infinite loops
+              }}
+            />
+            {isHovered && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <Play className="w-6 h-6 text-white" />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="mr-4 w-12 h-12 rounded-md overflow-hidden shadow-md shrink-0 bg-indigo-900/50 flex items-center justify-center">
+            {isHovered ? <Play className="h-6 w-6 text-white" /> : <Music className="h-6 w-6 text-indigo-400" />}
+          </div>
+        )}
+        
+        {/* Track Info */}
+        <div className="flex-grow min-w-0">
+          <div className="flex items-center">
+            <h3 className="font-semibold text-white truncate">{track.name || 'Untitled Track'}</h3>
+            {track.explicit && (
+              <span className="ml-2 px-1.5 py-0.5 text-xs bg-gray-700 text-gray-300 rounded">E</span>
+            )}
+          </div>
+          
+          {/* Artist */}
+          <div className="flex items-center text-sm text-gray-400 mt-1">
+            <User className="h-3 w-3 mr-1 text-indigo-400" />
+            <span className="text-indigo-200 font-medium truncate">
+              {getArtistDisplay()}
+            </span>
+          </div>
+        </div>
+        
+        {/* Album */}
+        {track.album_name && (
+          <div className="hidden md:flex items-center text-sm text-gray-400 truncate max-w-[200px] mx-4">
+            <Disc className="h-3 w-3 mr-1 text-indigo-400/70" />
+            {track.album_name}
+          </div>
+        )}
+        
+        {/* Stream Count */}
+        <div className="text-right ml-4">
+          <div className="text-indigo-400 font-medium whitespace-nowrap">
+            {formatNumber(track.play_count || 0)} streams
+          </div>
+          <div className="text-xs text-gray-500 flex items-center justify-end">
+            <Music className="h-3 w-3 mr-1" />
+            {track.duration_ms ? formatDuration(track.duration_ms) : '0:00'}
+            {track.share_url && (
+              <a 
+                href={track.share_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="ml-2 text-gray-400 hover:text-indigo-400 transition-all"
+                onClick={(e) => e.stopPropagation()} // Prevent triggering the parent click
+              >
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+          </div>
         </div>
       </div>
-      
-      {/* Album */}
-      {track.album_name && (
-        <div className="hidden md:flex items-center text-sm text-gray-400 truncate max-w-[200px] mx-4">
-          <Disc className="h-3 w-3 mr-1 text-indigo-400/70" />
-          {track.album_name}
-        </div>
-      )}
-      
-      {/* Stream Count */}
-      <div className="text-right ml-4">
-        <div className="text-indigo-400 font-medium whitespace-nowrap">
-          {formatNumber(track.play_count || 0)} streams
-        </div>
-        <div className="text-xs text-gray-500 flex items-center justify-end">
-          <Music className="h-3 w-3 mr-1" />
-          {track.duration_ms ? formatDuration(track.duration_ms) : '0:00'}
-          {track.share_url && (
-            <a 
-              href={track.share_url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="ml-2 text-gray-400 hover:text-indigo-400 transition-all"
-              onClick={(e) => e.stopPropagation()} // Prevent triggering the parent click
-            >
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          )}
-        </div>
-      </div>
-    </div>
+    </Link>
   );
 };
 

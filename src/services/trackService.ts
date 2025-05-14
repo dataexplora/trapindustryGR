@@ -34,6 +34,8 @@ export interface Track {
   artist_name?: string; // Added for convenience
   artists?: Artist[];  // Added to support multiple artists
   album_image?: AlbumImage; // Added for album artwork
+  release_date?: string; // Added for release date information
+  popularity?: number;   // Added for popularity score
 }
 
 export const trackService = {
@@ -446,6 +448,168 @@ export const trackService = {
     } catch (error) {
       console.error('Error fetching album:', error);
       return null;
+    }
+  },
+  
+  /**
+   * Get detailed track information by ID
+   */
+  getTrackById: async (trackId: string): Promise<Track | null> => {
+    const cacheKey = `track-detail-${trackId}`;
+    
+    // Try to get from cache first
+    const cachedData = cacheService.get<Track>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+    
+    try {
+      // First, fetch the track data
+      const { data: trackData, error: trackError } = await supabase
+        .from('tracks')
+        .select('*')
+        .eq('id', trackId)
+        .single();
+        
+      if (trackError) {
+        console.error('Error fetching track:', trackError);
+        return null;
+      }
+      
+      if (!trackData) {
+        console.warn(`No track found with ID: ${trackId}`);
+        return null;
+      }
+      
+      const track = trackData as Track;
+      
+      // Fetch album info if available
+      if (track.album_id) {
+        const { data: albumData } = await supabase
+          .from('albums')
+          .select('*')
+          .eq('id', track.album_id)
+          .single();
+        
+        if (albumData) {
+          track.album_name = albumData.name;
+        }
+      }
+      
+      // Fetch album images
+      if (track.album_id) {
+        const { data: albumImageData } = await supabase
+          .from('album_images')
+          .select('*')
+          .eq('album_id', track.album_id)
+          .order('width', { ascending: false })
+          .limit(1);
+        
+        if (albumImageData && albumImageData.length > 0) {
+          track.album_image = {
+            url: albumImageData[0].url,
+            width: albumImageData[0].width,
+            height: albumImageData[0].height
+          };
+        }
+      }
+      
+      // Fetch artists
+      const { data: artistTracksData } = await supabase
+        .from('artist_tracks')
+        .select(`
+          artist_id,
+          is_primary,
+          artists:artist_id(id, name, verified, monthly_listeners)
+        `)
+        .eq('track_id', trackId);
+        
+      if (artistTracksData && artistTracksData.length > 0) {
+        const artists = artistTracksData.map(relation => ({
+          id: relation.artists?.id,
+          name: relation.artists?.name, 
+          verified: relation.artists?.verified,
+          monthly_listeners: relation.artists?.monthly_listeners,
+          is_primary: relation.is_primary
+        }));
+        
+        track.artists = artists;
+        
+        // For backward compatibility - set the primary artist
+        const primaryArtist = artists.find(a => a.is_primary) || artists[0];
+        if (primaryArtist) {
+          track.artist_name = primaryArtist.name;
+          track.artist_id = primaryArtist.id;
+        }
+      }
+      
+      // Cache the result
+      cacheService.set(cacheKey, track);
+      
+      return track;
+    } catch (error) {
+      console.error('Error fetching track details:', error);
+      return null;
+    }
+  },
+  
+  /**
+   * Get similar tracks based on artists and genres
+   */
+  getSimilarTracks: async (trackId: string, limit = 5): Promise<Track[]> => {
+    const cacheKey = `similar-tracks-${trackId}-${limit}`;
+    
+    // Try to get from cache first
+    const cachedData = cacheService.get<Track[]>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+    
+    try {
+      // First get the track's artists
+      const track = await trackService.getTrackById(trackId);
+      
+      if (!track || !track.artists || track.artists.length === 0) {
+        return [];
+      }
+      
+      // Get artist IDs
+      const artistIds = track.artists.map(artist => artist.id);
+      
+      // Find other tracks by these artists
+      const { data: similarTracksData } = await supabase
+        .from('artist_tracks')
+        .select(`
+          track_id
+        `)
+        .in('artist_id', artistIds)
+        .neq('track_id', trackId) // Exclude the current track
+        .limit(limit * 2); // Get more than needed in case of duplicates
+        
+      if (!similarTracksData || similarTracksData.length === 0) {
+        return [];
+      }
+      
+      // Get unique track IDs
+      const similarTrackIds = [...new Set(similarTracksData.map(item => item.track_id))].slice(0, limit);
+      
+      // Fetch complete track data for each similar track
+      const similarTracks: Track[] = [];
+      
+      for (const id of similarTrackIds) {
+        const similarTrack = await trackService.getTrackById(id);
+        if (similarTrack) {
+          similarTracks.push(similarTrack);
+        }
+      }
+      
+      // Cache the result
+      cacheService.set(cacheKey, similarTracks);
+      
+      return similarTracks;
+    } catch (error) {
+      console.error('Error fetching similar tracks:', error);
+      return [];
     }
   }
 }; 

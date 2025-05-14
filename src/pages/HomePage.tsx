@@ -1,19 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import ArtistCard from '../components/ArtistCard';
 import TrackRow from '../components/TrackRow';
+import SpotifyPlayer from '../components/SpotifyPlayer';
 import { Button } from '@/components/ui/button';
 import { Music, AlertTriangle, User, Loader2 } from 'lucide-react';
 import { useData } from '@/context/DataContext';
 
 const HomePage = () => {
   const { topArtists, topTracks, isLoading, error, refreshData } = useData();
+  const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
   
   // Check if we're using fallback data
   const isFromHardcodedData = 
     (topArtists.length > 0 && topArtists[0].id.includes('-id')) || 
     (topTracks.length > 0 && topTracks[0].id.includes('track'));
+  
+  // Function to handle playing a track
+  const handlePlayTrack = (trackId: string) => {
+    setSelectedTrack(trackId);
+  };
   
   return (
     <Layout>
@@ -117,6 +124,7 @@ const HomePage = () => {
                       key={track.id} 
                       track={track} 
                       rank={index + 1} 
+                      onPlay={handlePlayTrack}
                     />
                   ))
                 ) : (
@@ -129,6 +137,13 @@ const HomePage = () => {
           </>
         )}
       </div>
+      
+      {/* Spotify Player Modal */}
+      <SpotifyPlayer
+        trackId={selectedTrack || ''}
+        isOpen={!!selectedTrack}
+        onClose={() => setSelectedTrack(null)}
+      />
     </Layout>
   );
 };

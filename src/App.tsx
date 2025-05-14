@@ -9,6 +9,11 @@ import ArtistsPage from "./pages/ArtistsPage";
 import TopArtistsPage from "./pages/TopArtistsPage";
 import SongsPage from "./pages/SongsPage";
 import ArtistDetailPage from "./pages/ArtistDetailPage";
+import TrackDetailPage from "./pages/TrackDetailPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import AboutUs from "./pages/AboutUs";
+import TermsOfService from "./pages/TermsOfService";
+import ContactUs from "./pages/ContactUs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +31,11 @@ const App = () => (
             <Route path="/hot-artists" element={<TopArtistsPage />} />
             <Route path="/songs" element={<SongsPage />} />
             <Route path="/artist/:id" element={<ArtistDetailPage />} />
+            <Route path="/track/:id" element={<TrackDetailPage />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/contact" element={<ContactUs />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
