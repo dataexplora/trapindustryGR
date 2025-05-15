@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import SEO from '../components/SEO';
+import Layout from '../components/Layout';
+import { Sparkles } from 'lucide-react';
 
 interface Artist {
   id: string;
@@ -172,16 +174,31 @@ export const DiscoverPage = () => {
         updatedAt={new Date().toISOString()}
       />
 
-      {/* Rest of your discover page component */}
-      <div className="container mx-auto px-4 py-8">
-        {loading ? (
-          <div>Loading...</div>
-        ) : (
-          <div>
-            {/* Your existing discover page content */}
+      <Layout>
+        <div className="bg-gradient-to-r from-indigo-900 to-purple-900 text-white py-10 px-4">
+          <div className="container mx-auto">
+            <div className="flex items-center mb-4">
+              <Sparkles className="mr-3 h-7 w-7 text-yellow-400" />
+              <h1 className="text-4xl font-bold text-white">Discover Greek Artists</h1>
+            </div>
+            <p className="text-lg max-w-3xl text-gray-200 mb-6">
+              Explore {totalArtists} artists across {uniqueGenres.length} genres in the Greek urban music scene.
+            </p>
           </div>
-        )}
-      </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-8">
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-pulse-subtle text-xl text-gray-300">Loading artists...</div>
+            </div>
+          ) : (
+            <div>
+              {/* Your existing discover page content */}
+            </div>
+          )}
+        </div>
+      </Layout>
     </>
   );
 }; 

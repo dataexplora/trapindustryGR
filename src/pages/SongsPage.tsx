@@ -186,7 +186,7 @@ const SongsPage = () => {
         <div className="container mx-auto py-8 px-4">
           <div className="flex items-center mb-6">
             <TrendingUp className="mr-2 h-6 w-6 text-indigo-400" />
-            <h1 className="text-3xl font-bold text-white">Most Streamed Tracks</h1>
+            <h1 className="text-3xl font-bold text-white">Top Greek Urban Songs & Tracks | Most Streamed</h1>
           </div>
 
           <div className="max-w-4xl mx-auto">

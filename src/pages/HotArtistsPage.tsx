@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import SEO from '../components/SEO';
+import Layout from '../components/Layout';
+import { TrendingUp } from 'lucide-react';
 
 interface HotArtist {
   id: string;
@@ -181,16 +183,32 @@ export const HotArtistsPage = () => {
         updatedAt={new Date().toISOString()}
       />
 
-      {/* Rest of your hot artists page component */}
-      <div className="container mx-auto px-4 py-8">
-        {loading ? (
-          <div>Loading...</div>
-        ) : (
-          <div>
-            {/* Your existing hot artists page content */}
+      <Layout>
+        <div className="bg-gradient-to-r from-purple-900 to-indigo-900 text-white py-10 px-4">
+          <div className="container mx-auto">
+            <div className="flex items-center mb-4">
+              <TrendingUp className="mr-3 h-7 w-7 text-yellow-400" />
+              <h1 className="text-4xl font-bold text-white">Trending Greek Artists</h1>
+            </div>
+            <p className="text-lg max-w-3xl text-gray-200 mb-6">
+              Discover the fastest-growing artists shaping the future of Greek urban music.
+              {trendingStats.topGainer && ` ${trendingStats.topGainer} leads with an impressive ${trendingStats.topGainerGrowth}% growth rate.`}
+            </p>
           </div>
-        )}
-      </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-8">
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-pulse-subtle text-xl text-gray-300">Loading hot artists...</div>
+            </div>
+          ) : (
+            <div>
+              {/* Your existing hot artists page content */}
+            </div>
+          )}
+        </div>
+      </Layout>
     </>
   );
 }; 

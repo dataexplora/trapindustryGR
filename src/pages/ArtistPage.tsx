@@ -158,7 +158,7 @@ export const ArtistPage = () => {
       
       {/* Rest of your artist page component */}
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-4">{artist.name}</h1>
+        <h1 className="text-4xl font-bold mb-4">{artist.name} | Greek {artist.genres[0] || 'Urban'} Artist</h1>
         <img src={artist.image_url} alt={artist.name} className="w-full max-w-2xl rounded-lg shadow-lg mb-6" />
         
         {/* Bio section with show more/less */}

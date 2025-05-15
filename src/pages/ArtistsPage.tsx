@@ -59,7 +59,7 @@ const ArtistsPage = () => {
         <div className="container mx-auto">
           <div className="flex items-center mb-4">
             <Sparkles className="mr-3 h-7 w-7 text-yellow-400" />
-            <h1 className="text-4xl font-bold text-white">Discover</h1>
+            <h1 className="text-4xl font-bold text-white">Discover Greek Urban Artists | Top Rappers & Trap Musicians</h1>
           </div>
           <p className="text-lg max-w-3xl text-gray-200 mb-6">
             Explore the vibrant Greek urban scene and discover the next big artists before they blow up.
