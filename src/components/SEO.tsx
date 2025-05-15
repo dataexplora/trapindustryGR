@@ -39,7 +39,7 @@ interface SEOProps {
 export const SEO = ({
   title = 'Urban Greece',
   description = 'Exploring the Urban Culture of the Greek Scene',
-  image = '/assets/images/logo.png',
+  image = '/assets/images/logo.webp',
   type = 'website',
   author = 'Urban Greece',
   keywords = ['greek music', 'urban music', 'greek artists', 'greek songs'],

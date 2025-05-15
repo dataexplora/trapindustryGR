@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import ArtistCard from '../components/ArtistCard';
@@ -21,14 +21,180 @@ const HomePage = () => {
   const handlePlayTrack = (trackId: string) => {
     setSelectedTrack(trackId);
   };
+
+  // Extract unique genres for keywords
+  const uniqueGenres = new Set<string>();
+  topArtists.forEach(artist => {
+    // Use optional chaining and type assertion to safely access genres
+    const genres = (artist as any).genres;
+    if (genres && Array.isArray(genres)) {
+      genres.forEach(genre => uniqueGenres.add(genre));
+    }
+  });
+
+  // Enhanced keywords for home page including dynamic data
+  const enhancedKeywords = [
+    'greek urban music',
+    'greek trap',
+    'greek hip hop',
+    'greek rap',
+    'greek drill',
+    'urban greece',
+    'greek music platform',
+    'greek hot artists',
+    'popular greek artists',
+    'greek rap playlists',
+    'trending greek songs',
+    'greek music streaming',
+    'greek music charts',
+    'top greek artists',
+    'top greek songs',
+    ...Array.from(uniqueGenres).map(genre => `greek ${genre}`),
+    ...topArtists.slice(0, 5).map(artist => artist.name),
+    ...topTracks.slice(0, 5).map(track => track.name)
+  ].join(', ');
+
+  // Prepare structured data for the homepage
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': 'https://urbangreece.com/#website',
+    'name': 'Urban Greece',
+    'url': 'https://urbangreece.com',
+    'description': 'Urban Greece: Ελληνική trap & hip-hop μουσική, κουλτούρα και lifestyle. Ανακάλυψε καλλιτέχνες, stories, events & αποκλειστικό περιεχόμενο.',
+    'inLanguage': 'el-GR',
+    'availableLanguage': [
+      {
+        '@type': 'Language',
+        'name': 'Greek',
+        'alternateName': 'el'
+      },
+      {
+        '@type': 'Language',
+        'name': 'English',
+        'alternateName': 'en'
+      }
+    ],
+    'publisher': {
+      '@type': 'Organization',
+      'name': 'Urban Greece',
+      'logo': {
+        '@type': 'ImageObject',
+        'url': 'https://urbangreece.com/assets/images/logo.webp'
+      }
+    },
+    'mainEntity': {
+      '@type': 'ItemList',
+      'itemListElement': [
+        {
+          '@type': 'ListItem',
+          'position': 1,
+          'name': 'Top Artists',
+          'url': 'https://urbangreece.com/hot-artists'
+        },
+        {
+          '@type': 'ListItem',
+          'position': 2,
+          'name': 'Top Songs',
+          'url': 'https://urbangreece.com/songs'
+        },
+        {
+          '@type': 'ListItem',
+          'position': 3,
+          'name': 'Discover',
+          'url': 'https://urbangreece.com/discover'
+        }
+      ]
+    }
+  };
+
+  // Set critical meta tags directly for better homepage SEO
+  useEffect(() => {
+    // Set the title - most important for SEO
+    document.title = "Urban Greece | Ό,τι συμβαίνει στo Ελληνικό Trap Industry";
+    
+    // Set critical meta tags for homepage
+    const metaTags = [
+      { name: 'description', content: 'Urban Greece: Ελληνική trap & hip-hop μουσική, κουλτούρα και lifestyle. Ανακάλυψε καλλιτέχνες, stories, events & αποκλειστικό περιεχόμενο.' },
+      { name: 'keywords', content: enhancedKeywords },
+      { property: 'og:title', content: 'Urban Greece | Ό,τι συμβαίνει στo Ελληνικό Trap Industry' },
+      { property: 'og:description', content: 'Urban Greece: Ελληνική trap & hip-hop μουσική, κουλτούρα και lifestyle. Ανακάλυψε καλλιτέχνες, stories, events & αποκλειστικό περιεχόμενο.' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: 'https://urbangreece.com' },
+      { property: 'og:image', content: 'https://urbangreece.com/assets/images/icon.webp' },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: 'Urban Greece | Ό,τι συμβαίνει στo Ελληνικό Trap Industry' },
+      { name: 'twitter:description', content: 'Urban Greece: Ελληνική trap & hip-hop μουσική, κουλτούρα και lifestyle. Ανακάλυψε καλλιτέχνες, stories, events & αποκλειστικό περιεχόμενο.' },
+      { name: 'twitter:image', content: 'https://urbangreece.com/assets/images/icon.webp' }
+    ];
+    
+    // Add or update meta tags
+    metaTags.forEach(({ name, property, content }) => {
+      let meta = document.querySelector(`meta[${name ? 'name="'+name+'"' : 'property="'+property+'"'}]`);
+      
+      if (!meta) {
+        meta = document.createElement('meta');
+        if (name) meta.setAttribute('name', name);
+        if (property) meta.setAttribute('property', property);
+        document.head.appendChild(meta);
+      }
+      
+      meta.setAttribute('content', content);
+    });
+
+    // Add canonical URL
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', 'https://urbangreece.com');
+    
+    // Add hreflang tags for language alternatives
+    const hreflangs = [
+      { hreflang: 'el', href: 'https://urbangreece.com/' },
+      { hreflang: 'en', href: 'https://urbangreece.com/en/' },
+      { hreflang: 'x-default', href: 'https://urbangreece.com/' }
+    ];
+    
+    hreflangs.forEach(({ hreflang, href }) => {
+      let link = document.querySelector(`link[rel="alternate"][hreflang="${hreflang}"]`);
+      
+      if (!link) {
+        link = document.createElement('link');
+        link.setAttribute('rel', 'alternate');
+        link.setAttribute('hreflang', hreflang);
+        document.head.appendChild(link);
+      }
+      
+      link.setAttribute('href', href);
+    });
+    
+    // Add structured data
+    let script = document.querySelector('script[type="application/ld+json"]');
+    if (!script) {
+      script = document.createElement('script');
+      script.setAttribute('type', 'application/ld+json');
+      document.head.appendChild(script);
+    }
+    
+    // Just use the structured data directly without recreating availableLanguage
+    script.textContent = JSON.stringify(structuredData);
+    
+    // Cleanup on unmount
+    return () => {
+      // No need to clean up as this is the homepage and other pages will set their own tags
+    };
+  }, [enhancedKeywords, structuredData]);
   
   return (
     <Layout>
       <div className="bg-gradient-to-r from-indigo-900 to-purple-900 text-white py-16 px-4">
         <div className="container mx-auto text-center">
-          <h1 className="text-4xl font-bold mb-4">Urban Greece | The Ultimate Greek Trap & Hip Hop Platform</h1>
+          <h1 className="text-4xl font-bold mb-4">Urban Greece | Ό,τι συμβαίνει στo Ελληνικό Trap Industry</h1>
           <p className="text-xl max-w-2xl mx-auto">
-            Discover the most popular urban Greek artists and songs shaping the culture today.
+            ⚡It's more than music. It's about the culture⚡
           </p>
         </div>
       </div>
@@ -108,7 +274,7 @@ const HomePage = () => {
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center">
                   <Music className="mr-2 h-5 w-5 text-indigo-400" />
-                  <h2 className="text-2xl font-bold text-white">Top Songs</h2>
+                  <h2 className="text-2xl font-bold text-white">Most Streamed Songs</h2>
                 </div>
                 <Link to="/songs">
                   <Button variant="outline" className="border-indigo-800 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-900/50">

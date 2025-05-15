@@ -139,7 +139,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex justify-center lg:justify-between items-center">
             <Link to="/" className="flex items-center">
               <img 
-                src="/assets/images/logo.png" 
+                src="/assets/images/logo.webp" 
                 alt="Urban Greece Logo" 
                 className="h-8 lg:pl-8 lg:mt-3 w-auto transition-transform duration-200 hover:scale-105"
               />
@@ -233,7 +233,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
             <div className="text-center md:text-left">
               <div className="flex items-center justify-center md:justify-start mb-4">
                 <img 
-                  src="/assets/images/icon.png" 
+                  src="/assets/images/icon.webp" 
                   alt="Urban Greece Logo" 
                   className="h-12 w-auto mr-2"
                 />
