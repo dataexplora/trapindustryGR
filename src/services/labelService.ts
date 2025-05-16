@@ -196,7 +196,7 @@ export const labelService = {
       finalLabels.sort((a, b) => b.album_count - a.album_count);
       
       // Cache the results
-      cacheService.set(cacheKey, finalLabels, 3600); // Cache for 1 hour
+      cacheService.set(cacheKey, finalLabels, 24 * 60 * 60); // Cache for 24 hours
       
       return finalLabels;
     } catch (error) {
@@ -560,7 +560,7 @@ export const labelService = {
       });
       
       // Cache the results
-      cacheService.set(cacheKey, result, 3600); // Cache for 1 hour
+      cacheService.set(cacheKey, result, 24 * 60 * 60); // Cache for 24 hours
       
       return result;
     } catch (error) {
@@ -725,7 +725,7 @@ export const labelService = {
       });
       
       // Cache the results
-      cacheService.set(cacheKey, result, 3600); // Cache for 1 hour
+      cacheService.set(cacheKey, result, 24 * 60 * 60); // Cache for 24 hours
       
       return result;
     } catch (error) {

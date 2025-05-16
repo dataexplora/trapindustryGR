@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Layout from '../components/Layout';
 import ArtistCard from '../components/ArtistCard';
-import { User, SlidersHorizontal, Users, Loader2, Sparkles, Filter, Clock, ArrowUp, TrendingUp, Star } from 'lucide-react';
+import { User, SlidersHorizontal, Users, Loader2, Sparkles, Filter, Clock, ArrowUp, TrendingUp, Star, Search } from 'lucide-react';
 import { formatNumber } from '../utils/format';
 import { Button } from '@/components/ui/button';
 import { useDiscoverArtists } from '@/hooks/useDiscoverArtists';
@@ -14,6 +14,7 @@ const Discover = () => {
   const [maxListeners, setMaxListeners] = useState(250000);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filterView, setFilterView] = useState<'all' | 'emerging' | 'rising'>('emerging');
+  const [searchQuery, setSearchQuery] = useState('');
   const { t, language } = useLanguage();
   
   // Filter artists while preserving their global ranks
@@ -31,13 +32,21 @@ const Discover = () => {
       );
     }
     
+    // Apply search filter if query exists
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(artist => 
+        artist.name.toLowerCase().includes(query)
+      );
+    }
+    
     // Sort by monthly_listeners but preserve original rank
     return [...filtered].sort((a, b) => {
       const aValue = a.monthly_listeners || 0;
       const bValue = b.monthly_listeners || 0;
       return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
     });
-  }, [allArtists, minListeners, maxListeners, sortDirection, filterView]);
+  }, [allArtists, minListeners, maxListeners, sortDirection, filterView, searchQuery]);
 
   const handleFilterChange = (view: 'all' | 'emerging' | 'rising') => {
     setFilterView(view);
@@ -54,6 +63,14 @@ const Discover = () => {
       setMaxListeners(Infinity);
       setSortDirection('desc');
     }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent page refresh
   };
 
   return (
@@ -75,6 +92,22 @@ const Discover = () => {
             <p className="text-lg max-w-3xl text-gray-200 mb-6">
               {t('discover.subtitle', 'Explore the latest tracks, trending artists, and influential releases shaping Greek urban culture')}
             </p>
+            
+            {/* Search bar */}
+            <form onSubmit={handleSearchSubmit} className="max-w-xl mb-6">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Search className="w-5 h-5 text-gray-400" />
+                </div>
+                <input
+                  type="search"
+                  className="w-full p-4 pl-10 text-sm text-white border border-indigo-700 rounded-lg bg-indigo-800/50 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder={t('discover.search.placeholder', 'Search for artists...')}
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                />
+              </div>
+            </form>
             
             <div className="flex flex-wrap gap-2 mt-6">
               <Button 
@@ -109,18 +142,19 @@ const Discover = () => {
         </div>
         
         <div className="container mx-auto py-8 px-4">
-          <div className="mb-6 bg-dark-card rounded-lg p-4 flex items-center justify-between">
+          <div className="mb-6 bg-dark-card rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center">
               <Filter className="h-5 w-5 text-yellow-400 mr-2" />
               <span className="text-gray-300">
                 {t('discover.stats', 'Showing {0} of {1} artists', filteredArtists.length, totalArtists)}
+                {searchQuery && ` ${t('discover.stats.matching', 'matching')} "${searchQuery}"`}
                 {minListeners > 0 && ` ${t('discover.stats.with', 'with')} ${formatNumber(minListeners)}+`}
                 {maxListeners < Infinity && ` ${t('discover.stats.to', 'to')} ${formatNumber(maxListeners)}`} 
                 {t('discover.filter.listeners', 'monthly listeners')}
               </span>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 ml-auto">
               <div className="flex items-center">
                 <span className="text-gray-400 text-sm mr-2">{t('discover.sort.label', 'Sort')}:</span>
                 <Button
@@ -164,7 +198,20 @@ const Discover = () => {
             </div>
           ) : filteredArtists.length === 0 ? (
             <div className="text-center py-10 text-gray-400">
-              <p>{t('discover.noResults', 'No results found')}</p>
+              {searchQuery ? (
+                <div>
+                  <p className="text-xl mb-2">{t('discover.noSearchResults', 'No artists found matching "{0}"', searchQuery)}</p>
+                  <p className="text-gray-500">{t('discover.tryDifferent', 'Try a different search term or clear the search')}</p>
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white"
+                  >
+                    {t('discover.clearSearch', 'Clear Search')}
+                  </button>
+                </div>
+              ) : (
+                <p>{t('discover.noResults', 'No results found')}</p>
+              )}
             </div>
           ) : (
             <>

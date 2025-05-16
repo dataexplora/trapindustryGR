@@ -49,6 +49,14 @@ export interface Track {
   album?: {
     id: string;
     name: string;
+    image?: {
+      url: string;
+    }
+  };
+  album_id?: string;
+  album_name?: string;
+  album_image?: {
+    url: string;
   };
   last_updated?: string;
 }
@@ -315,6 +323,15 @@ export const artistService = {
    * Get an artist by ID
    */
   getArtistById: async (id: string): Promise<ArtistWithImages | null> => {
+    // Add cache key
+    const cacheKey = `artist-detail-${id}`;
+    
+    // Try to get from cache first
+    const cachedData = cacheService.get<ArtistWithImages>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+    
     try {
       // Fetch artist by ID
       const { data: artist, error } = await supabase
@@ -373,12 +390,17 @@ export const artistService = {
           .map(img => img.url) || []
       };
 
-      return {
+      const artistWithImages = {
         ...artist,
         images: groupedImages,
         externalLinks: externalLinks || [],
         topCities: topCities || []
       } as ArtistWithImages;
+      
+      // Cache the result - 24 hours
+      cacheService.set(cacheKey, artistWithImages, 24 * 60 * 60 * 1000);
+
+      return artistWithImages;
     } catch (error) {
       console.error(`Error in getArtistById for ID ${id}:`, error);
       return null;
@@ -389,7 +411,33 @@ export const artistService = {
    * Get artist's top tracks ordered by play count
    */
   getArtistTopTracks: async (artistId: string, limit = 20): Promise<Track[]> => {
+    // Add cache key
+    const cacheKey = `artist-top-tracks-${artistId}-${limit}`;
+    
+    // Try to get from cache first
+    const cachedData = cacheService.get<Track[]>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+    
     try {
+      // Properly type the response structure
+      interface ArtistTrackResponse {
+        track_id: string;
+        is_top_track: boolean;
+        tracks: {
+          id: string;
+          name: string;
+          share_url?: string;
+          explicit?: boolean;
+          duration_ms?: number;
+          disc_number?: number;
+          play_count?: number;
+          album_id?: string;
+          last_updated?: string;
+        };
+      }
+      
       // Fetch top tracks for the artist, ordered by play count
       const { data: topTracks, error: tracksError } = await supabase
         .from('artist_tracks')
@@ -420,59 +468,106 @@ export const artistService = {
         return [];
       }
 
-      // Extract the tracks and sort by play count
-      const tracks = topTracks
-        .map(item => item.tracks)
-        .sort((a, b) => (b.play_count || 0) - (a.play_count || 0))
-        .slice(0, limit);
-
-      // Fetch album details and artwork for each track
-      const tracksWithAlbums = await Promise.all(
-        tracks.map(async (track) => {
-          if (!track.album_id) {
-            return track;
+      // Create an array to hold our tracks
+      const tracks: Track[] = [];
+      
+      // Extract track IDs and album IDs for additional queries
+      const trackIds: string[] = [];
+      const albumIds: string[] = [];
+      
+      // First pass: collect IDs
+      for (const item of topTracks) {
+        if (!item.tracks) continue;
+        const trackItem = item.tracks as any;
+        trackIds.push(trackItem.id);
+        if (trackItem.album_id) {
+          albumIds.push(trackItem.album_id);
+        }
+      }
+      
+      // Fetch album images if we have album IDs
+      let albumImagesMap: Record<string, {url: string}> = {};
+      if (albumIds.length > 0) {
+        try {
+          const { data: albumImagesData, error: albumImagesError } = await supabase
+            .from('album_images')
+            .select('album_id, url')
+            .in('album_id', albumIds);
+            
+          if (!albumImagesError && albumImagesData) {
+            // Use the first image for each album
+            albumImagesMap = albumImagesData.reduce((acc, img) => {
+              if (!acc[img.album_id]) {
+                acc[img.album_id] = { url: img.url };
+              }
+              return acc;
+            }, {} as Record<string, {url: string}>);
           }
-
-          // Get album name and artwork
-          const { data: album, error: albumError } = await supabase
+        } catch (err) {
+          console.error('Error fetching album images:', err);
+        }
+      }
+      
+      // Fetch album names
+      let albumNamesMap: Record<string, string> = {};
+      if (albumIds.length > 0) {
+        try {
+          const { data: albumsData, error: albumsError } = await supabase
             .from('albums')
-            .select(`
-              id, 
-              name,
-              album_images (
-                url,
-                width,
-                height
-              )
-            `)
-            .eq('id', track.album_id)
-            .single();
-
-          if (albumError) {
-            console.error(`Error fetching album for track ${track.id}:`, albumError);
-            return track;
+            .select('id, name')
+            .in('id', albumIds);
+            
+          if (!albumsError && albumsData) {
+            albumNamesMap = albumsData.reduce((acc, album) => ({
+              ...acc,
+              [album.id]: album.name
+            }), {});
           }
-
-          // Get the largest album image
-          const albumImage = album?.album_images?.length > 0
-            ? album.album_images.reduce((largest, current) => {
-                const currentSize = (current.width || 0) * (current.height || 0);
-                const largestSize = (largest.width || 0) * (largest.height || 0);
-                return currentSize > largestSize ? current : largest;
-              })
-            : undefined;
-
-          return {
-            ...track,
-            album: {
-              ...album,
-              image: albumImage
-            }
-          };
-        })
-      );
-
-      return tracksWithAlbums;
+        } catch (err) {
+          console.error('Error fetching album names:', err);
+        }
+      }
+      
+      // Process each response item and create Track objects with images
+      for (const item of topTracks) {
+        if (!item.tracks) continue;
+        
+        const trackData = item.tracks as any;
+        const albumId = trackData.album_id;
+        
+        // Create a Track object from the nested data
+        const track: Track = {
+          id: trackData.id || item.track_id,
+          name: trackData.name || '',
+          share_url: trackData.share_url,
+          explicit: trackData.explicit,
+          duration_ms: trackData.duration_ms,
+          disc_number: trackData.disc_number,
+          play_count: trackData.play_count,
+          album_id: albumId,
+          album_name: albumId ? albumNamesMap[albumId] || '' : undefined,
+          // Create album object with image data
+          album: albumId ? { 
+            id: albumId, 
+            name: albumNamesMap[albumId] || '',
+            image: albumImagesMap[albumId]
+          } : undefined,
+          album_image: albumId ? albumImagesMap[albumId] : undefined,
+          last_updated: trackData.last_updated
+        };
+        
+        tracks.push(track);
+      }
+      
+      // Sort by play count and limit results
+      const sortedTracks = tracks
+        .sort((a, b) => ((b.play_count || 0) - (a.play_count || 0)))
+        .slice(0, limit);
+        
+      // Cache the result - 24 hours
+      cacheService.set(cacheKey, sortedTracks, 24 * 60 * 60 * 1000);
+      
+      return sortedTracks;
     } catch (error) {
       console.error(`Error in getArtistTopTracks for artist ${artistId}:`, error);
       return [];
@@ -483,6 +578,15 @@ export const artistService = {
    * Get the total stream count for an artist from all their tracks
    */
   getArtistTotalStreamCount: async (artistId: string): Promise<number> => {
+    // Add cache key
+    const cacheKey = `artist-total-streams-${artistId}`;
+    
+    // Try to get from cache first
+    const cachedData = cacheService.get<number>(cacheKey);
+    if (cachedData !== null) {
+      return cachedData;
+    }
+    
     try {
       // Step 1: Get all track IDs for this artist
       const { data: artistTracks, error: trackIdsError } = await supabase
@@ -521,6 +625,9 @@ export const artistService = {
       const totalStreams = tracksData.reduce((sum, track) => {
         return sum + (track.play_count || 0);
       }, 0);
+      
+      // Cache the result - 1 hour
+      cacheService.set(cacheKey, totalStreams, 60 * 60 * 1000);
       
       return totalStreams;
     } catch (error) {

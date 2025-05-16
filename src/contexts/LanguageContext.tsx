@@ -338,7 +338,7 @@ const translations: Translations = {  en: {
     // Labels page    
     'labels.title': 'Labels',    
     'labels.subtitle': 'Οι εταιρείες που διαμορφώνουν το ελληνικό urban μουσικό τοπίο και ο αντίκτυπός τους στη βιομηχανία.',    
-    'labels.loading': 'Φόρτωση δεδομένων δισκογραφικών...',    
+    'labels.loading': 'Loading Labels data...',    
     'labels.tryAgain': 'Δοκιμάστε ξανά',    
     'labels.section': 'Δισκογραφικές Εταιρείες',    
     'labels.category': 'Μουσική Βιομηχανία',    

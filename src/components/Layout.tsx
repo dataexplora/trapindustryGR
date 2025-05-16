@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { TrendingUp, Instagram, Twitter, Youtube, Menu, X, Disc3 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import LanguageToggle from './LanguageToggle';
+import FloatingLanguageToggle from './FloatingLanguageToggle';
 import { useLanguage } from '../contexts/LanguageContext';
 
 declare global {
@@ -183,7 +184,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                   </Link>
                 </li>
                 <li className="ml-2">
-                  <LanguageToggle />
+                  <LanguageToggle className="hidden lg:block" />
                 </li>
               </ul>
             </nav>
@@ -241,11 +242,6 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                       {t('labels.title', 'Labels')}
                     </Link>
                   </li>
-                  <li className="mt-4">
-                    <div className="flex justify-center">
-                      <LanguageToggle />
-                    </div>
-                  </li>
                 </ul>
               </div>
             </nav>
@@ -256,6 +252,8 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
       <main className="flex-grow bg-dark-background">
         {children}
       </main>
+      
+      <FloatingLanguageToggle />
       
       <footer className="bg-black text-white py-12">
         <div className="container mx-auto px-4">

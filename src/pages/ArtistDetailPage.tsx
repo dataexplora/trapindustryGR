@@ -7,6 +7,7 @@ import ImageGallery from '../components/ImageGallery';
 import SEO from '../components/SEO';
 import ArtistReactionButtons from '../components/ArtistReactionButtons';
 import CompactArtistReactions from '../components/CompactArtistReactions';
+import { pageCache } from '../lib/pageCache';
 import { 
   Check, Music, User, Users, ExternalLink, Calendar, Heart, 
   Instagram, Twitter, Youtube, Facebook, Globe, Link2, Headphones,
@@ -49,14 +50,36 @@ const cleanBiography = (text: string): string => {
 
 const ArtistDetailPage = () => {
   const { id } = useParams<{ id: string }>();
-  const [artist, setArtist] = useState<ArtistWithImages | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [topTracks, setTopTracks] = useState<any[]>([]);
+  const [artist, setArtist] = useState<ArtistWithImages | null>(() => {
+    // Initial state from page cache if available
+    if (id) {
+      const cachedData = pageCache.get<ArtistWithImages>(`artist-page-${id}`);
+      return cachedData || null;
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(!artist); // Only loading if no cached artist
+  const [topTracks, setTopTracks] = useState<any[]>(() => {
+    // Initial state from page cache if available
+    if (id) {
+      const cachedData = pageCache.get<any[]>(`artist-tracks-${id}`);
+      return cachedData || [];
+    }
+    return [];
+  });
   const [displayedTracks, setDisplayedTracks] = useState(5);
-  const [totalStreams, setTotalStreams] = useState<number>(0);
+  const [totalStreams, setTotalStreams] = useState<number>(() => {
+    // Initial state from page cache if available
+    if (id) {
+      const cachedData = pageCache.get<number>(`artist-streams-${id}`);
+      return cachedData || 0;
+    }
+    return 0;
+  });
   const [showTopCities, setShowTopCities] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
   const [isExpandedBio, setIsExpandedBio] = useState(false);
+  const [dataLoadError, setDataLoadError] = useState<string | null>(null);
   const topCitiesRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -73,34 +96,64 @@ const ArtistDetailPage = () => {
     };
   }, []);
 
+  // Master data fetching function - uses proper error handling and caching
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchArtistData = async () => {
+      if (!id) return;
+      
+      // If we already have data from page cache, skip loading
+      if (artist && topTracks.length > 0 && totalStreams > 0) {
+        console.log(`Using page cached data for artist ${id}`);
+        return;
+      }
+      
       setIsLoading(true);
+      setDataLoadError(null);
+      
       try {
-        if (id) {
-          const artistData = await artistService.getArtistById(id);
-          
+        // Fetch all data in parallel for performance
+        const [artistData, tracksData, streamsCount] = await Promise.all([
+          artistService.getArtistById(id),
+          artistService.getArtistTopTracks(id, 20),
+          artistService.getArtistTotalStreamCount(id)
+        ]);
+        
+        // Only update state if component is still mounted
+        if (isMounted) {
           if (artistData) {
             setArtist(artistData);
+            setTopTracks(tracksData);
+            setTotalStreams(streamsCount);
             
-            // Fetch top tracks
-            const tracks = await artistService.getArtistTopTracks(id);
-            setTopTracks(tracks);
-            
-            // Fetch total stream count
-            const streams = await artistService.getArtistTotalStreamCount(id);
-            setTotalStreams(streams);
+            // Store in page cache for future navigations (24 hour expiry)
+            pageCache.set(`artist-page-${id}`, artistData, 24 * 60 * 60 * 1000);
+            pageCache.set(`artist-tracks-${id}`, tracksData, 24 * 60 * 60 * 1000);
+            pageCache.set(`artist-streams-${id}`, streamsCount, 24 * 60 * 60 * 1000);
+          } else {
+            setDataLoadError("Artist not found");
           }
         }
       } catch (error) {
         console.error('Error fetching artist data:', error);
+        if (isMounted) {
+          setDataLoadError("Failed to load artist data. Please try again later.");
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchArtistData();
-  }, [id]);
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+      isMounted = false;
+    };
+  }, [id, artist, topTracks, totalStreams]);
 
   // Toggle top cities dropdown
   const toggleTopCities = () => {
@@ -128,11 +181,12 @@ const ArtistDetailPage = () => {
     );
   }
 
-  if (!artist) {
+  if (dataLoadError || !artist) {
     return (
       <Layout>
         <div className="container mx-auto py-8 px-4 text-center">
           <h2 className="text-2xl text-white">Artist not found</h2>
+          <p className="text-gray-300 mt-2">{dataLoadError || "The artist you're looking for doesn't exist or may have been removed."}</p>
           <Link to="/" className="text-indigo-400 hover:underline mt-4 inline-block">
             Return to Artists
           </Link>
@@ -487,19 +541,6 @@ const ArtistDetailPage = () => {
           ) : (
             <p className="text-center text-gray-400">No gallery images available for this artist.</p>
           )}
-        </div>
-
-        <div className="container mx-auto py-8 px-4">
-          <div className="flex items-center mb-6">
-            <Calendar className="mr-2 h-5 w-5 text-indigo-400" />
-            <h2 className="text-2xl font-bold text-white">Last Updated</h2>
-          </div>
-          
-          <div className="bg-dark-card p-4 rounded-lg border border-dark-border max-w-lg mx-auto">
-            <p className="text-center text-gray-300">
-              {artist.last_updated ? new Date(artist.last_updated).toLocaleDateString() : 'No update information available'}
-            </p>
-          </div>
         </div>
       </Layout>
     </>

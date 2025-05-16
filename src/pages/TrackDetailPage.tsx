@@ -4,6 +4,7 @@ import { Track, trackService } from '../services/trackService';
 import Layout from '../components/Layout';
 import SpotifyPlayer from '../components/SpotifyPlayer';
 import SEO from '../components/SEO';
+import { pageCache } from '../lib/pageCache';
 import { 
   Play, Music, Calendar, Clock, Disc, ExternalLink, 
   Check, User, Share2, Heart, Star, ListMusic
@@ -22,30 +23,70 @@ const getYearFromDate = (dateString?: string): string => {
 
 const TrackDetailPage = () => {
   const { id } = useParams<{ id: string }>();
-  const [track, setTrack] = useState<Track | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [similarTracks, setSimilarTracks] = useState<Track[]>([]);
+  const [track, setTrack] = useState<Track | null>(() => {
+    // Initialize from page cache if available
+    if (id) {
+      const cachedData = pageCache.get<Track>(`track-page-${id}`);
+      return cachedData || null;
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(!track); // Only loading if no cached track
+  const [similarTracks, setSimilarTracks] = useState<Track[]>(() => {
+    // Initialize from page cache if available
+    if (id) {
+      const cachedData = pageCache.get<Track[]>(`similar-tracks-page-${id}`);
+      return cachedData || [];
+    }
+    return [];
+  });
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
+  const [dataLoadError, setDataLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchTrackData = async () => {
+      if (!id) return;
+      
+      // If we already have data from page cache, skip loading
+      if (track && similarTracks.length > 0) {
+        console.log(`Using page cached data for track ${id}`);
+        return;
+      }
+      
       setIsLoading(true);
+      setDataLoadError(null);
+      
       try {
-        if (id) {
-          // Fetch track details
-          const trackData = await trackService.getTrackById(id);
+        // Fetch track details and similar tracks in parallel for efficiency
+        const [trackData, similarTracksData] = await Promise.all([
+          trackService.getTrackById(id),
+          trackService.getSimilarTracks(id, 6)
+        ]);
+        
+        // Only update state if component is still mounted
+        if (isMounted) {
           if (trackData) {
             setTrack(trackData);
-            
-            // Fetch similar tracks
-            const similarTracksData = await trackService.getSimilarTracks(id, 6);
             setSimilarTracks(similarTracksData);
+            
+            // Store in page cache for future navigations (24 hour expiry)
+            pageCache.set(`track-page-${id}`, trackData, 24 * 60 * 60 * 1000);
+            pageCache.set(`similar-tracks-page-${id}`, similarTracksData, 24 * 60 * 60 * 1000);
+          } else {
+            setDataLoadError("Track not found");
           }
         }
       } catch (error) {
         console.error('Error fetching track data:', error);
+        if (isMounted) {
+          setDataLoadError("Failed to load track data. Please try again later.");
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -53,7 +94,12 @@ const TrackDetailPage = () => {
     
     // Scroll to top when page loads
     window.scrollTo(0, 0);
-  }, [id]);
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+      isMounted = false;
+    };
+  }, [id, track, similarTracks]);
 
   const handlePlayClick = () => {
     setIsPlayerOpen(true);
@@ -75,12 +121,12 @@ const TrackDetailPage = () => {
   }
 
   // Track not found state
-  if (!track) {
+  if (dataLoadError || !track) {
     return (
       <Layout>
         <div className="container mx-auto py-8 px-4 text-center">
           <h2 className="text-2xl text-white">Track not found</h2>
-          <p className="text-gray-300 mt-2">The track you're looking for doesn't exist or may have been removed.</p>
+          <p className="text-gray-300 mt-2">{dataLoadError || "The track you're looking for doesn't exist or may have been removed."}</p>
           <Link to="/songs" className="text-indigo-400 hover:underline mt-4 inline-block">
             Browse all tracks
           </Link>

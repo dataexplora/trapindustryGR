@@ -29,16 +29,14 @@ const LanguageToggle: React.FC<LanguageToggleProps> = ({ className = '' }) => {
   return (
     <button
       onClick={toggleLanguage}
-      className={`bg-transparent border-0 cursor-pointer ${className}`}
+      className={`bg-transparent border-0 cursor-pointer p-2 ${className}`}
       aria-label={t('language.switch', 'Switch to {0}', oppositeLanguage)}
       title={t('language.switch', 'Switch to {0}', oppositeLanguage)}
-      style={{ background: 'transparent', padding: '8px' }}
     >
       <img 
         src={language === 'en' ? '/assets/images/flags/us.svg' : '/assets/images/flags/gr.svg'} 
         alt={language === 'en' ? 'US Flag' : 'Greek Flag'}
         className="w-8 h-5 rounded-full"
-        style={{ borderRadius: '9999px', overflow: 'hidden' }}
       />
     </button>
   );
