@@ -19,6 +19,23 @@ const translations: Translations = {
     'footer.about': 'Urban Greece is the premier platform dedicated to showcasing the vibrant world of Greek urban music. Since 2021, we\'ve been connecting artists, fans, and industry professionals through our commitment to authenticity and innovation.',
     'footer.copyright': '© {0} Urban Greece. All rights reserved. Celebrating and elevating Greek urban music culture.',
     
+    // Discover page
+    'discover.title': 'Discover Greek Urban Music',
+    'discover.subtitle': 'Explore the latest tracks, trending artists, and influential releases shaping Greek urban culture',
+    'discover.filter.emerging': 'New Talents',
+    'discover.filter.rising': 'Rising Stars',
+    'discover.filter.all': 'All Artists',
+    'discover.filter.listeners': 'Monthly Listeners',
+    'discover.loading': 'Loading artists...',
+    'discover.error': 'Error loading artists',
+    'discover.retry': 'Retry',
+    'discover.noResults': 'No results found',
+    'discover.showAll': 'Show All Artists',
+    'discover.stats': 'Showing {0} of {1} artists',
+    'discover.seo.title': 'Emerging Artists 2023 | Newcomers Greece | Rising Talents',
+    'discover.seo.description': 'Discover the top {0} emerging artists in the Greek urban music scene. New talents in trap and hip hop, with listener statistics and rankings. The most up-to-date list of new Greek artists.',
+    'discover.seo.section': 'Emerging Artists',
+    
     // About section
     'about.ourStory.title': 'Our Story',
     'about.ourStory.p1': 'Urban Greece was born from a shared vision: to elevate Greek urban music to its rightful place at the center of the cultural conversation. We\'re not just observers – we\'re active participants in the scene\'s evolution and growth.',
@@ -174,6 +191,23 @@ const translations: Translations = {
     'footer.p1': 'Ο πρώτος σας προορισμός για να ανακαλύψετε τον ζωντανό κόσμο της ελληνικής urban μουσικής. Παρουσιάζουμε τους καλύτερους καλλιτέχνες, κομμάτια και ανερχόμενα ταλέντα της ελληνικής μουσικής σκηνής.',
     'footer.about': 'Το Urban Greece είναι η κορυφαία πλατφόρμα αφιερωμένη στην ανάδειξη του ζωντανού κόσμου της ελληνικής urban μουσικής. Από το 2021, συνδέουμε καλλιτέχνες, θαυμαστές και επαγγελματίες της βιομηχανίας μέσω της δέσμευσής μας στην αυθεντικότητα και την καινοτομία.',
     'footer.copyright': '© {0} Urban Greece. Όλα τα δικαιώματα διατηρούνται. Γιορτάζουμε και αναδεικνύουμε την ελληνική urban μουσική κουλτούρα.',
+    
+    // Discover page
+    'discover.title': 'Ανακαλύψτε την Ελληνική Urban Μουσική',
+    'discover.subtitle': 'Εξερευνήστε τα τελευταία κομμάτια, τους καλλιτέχνες σε άνοδο και τις επιδραστικές κυκλοφορίες που διαμορφώνουν την ελληνική urban κουλτούρα',
+    'discover.filter.emerging': 'Νέα Ταλέντα',
+    'discover.filter.rising': 'Ανερχόμενα Αστέρια',
+    'discover.filter.all': 'Όλοι οι Καλλιτέχνες',
+    'discover.filter.listeners': 'Μηνιαίοι Ακροατές',
+    'discover.loading': 'Φόρτωση καλλιτεχνών...',
+    'discover.error': 'Σφάλμα φόρτωσης καλλιτεχνών',
+    'discover.retry': 'Προσπαθήστε ξανά',
+    'discover.noResults': 'Δεν βρέθηκαν αποτελέσματα',
+    'discover.showAll': 'Προβολή Όλων των Καλλιτεχνών',
+    'discover.stats': 'Εμφάνιση {0} από {1} καλλιτέχνες',
+    'discover.seo.title': 'Ανερχόμενοι Καλλιτέχνες 2023 | Newcomers Greece | Ανερχόμενοι Ράπερς',
+    'discover.seo.description': 'Ανακαλύψτε τους {0} κορυφαίους ανερχόμενους καλλιτέχνες της ελληνικής urban σκηνής. Νέα ταλέντα στην trap και hip hop, με στατιστικά ακροατών και κατάταξη. Η πιο ενημερωμένη λίστα με νέους Έλληνες καλλιτέχνες.',
+    'discover.seo.section': 'Ανερχόμενοι Καλλιτέχνες',
     
     // About section
     'about.ourStory.title': 'Η Ιστορία μας',

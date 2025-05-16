@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DataProvider } from "@/context/DataContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import HomePage from "./pages/HomePage";
-import ArtistsPage from "./pages/ArtistsPage";
+import Discover from "./pages/Discover";
 import TopArtistsPage from "./pages/TopArtistsPage";
 import SongsPage from "./pages/SongsPage";
 import ArtistDetailPage from "./pages/ArtistDetailPage";
@@ -29,7 +29,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/discover" element={<ArtistsPage />} />
+              <Route path="/discover" element={<Discover />} />
               <Route path="/hot-artists" element={<TopArtistsPage />} />
               <Route path="/songs" element={<SongsPage />} />
               <Route path="/artist/:id" element={<ArtistDetailPage />} />

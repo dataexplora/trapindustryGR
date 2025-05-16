@@ -6,13 +6,15 @@ import { formatNumber } from '../utils/format';
 import { Button } from '@/components/ui/button';
 import { useDiscoverArtists } from '@/hooks/useDiscoverArtists';
 import SEO from '../components/SEO';
+import { useLanguage } from '../contexts/LanguageContext';
 
-const ArtistsPage = () => {
+const Discover = () => {
   const { allArtists, totalArtists, isLoading, error, refreshData } = useDiscoverArtists();
   const [minListeners, setMinListeners] = useState(10000);
   const [maxListeners, setMaxListeners] = useState(250000);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filterView, setFilterView] = useState<'all' | 'emerging' | 'rising'>('emerging');
+  const { t, language } = useLanguage();
 
   // Filter artists while preserving their global ranks
   const filteredArtists = useMemo(() => {
@@ -210,11 +212,11 @@ const ArtistsPage = () => {
   return (
     <>
       <SEO
-        title={`Ανερχόμενοι Καλλιτέχνες 2023 | Newcomers Greece | Ανερχόμενοι Ράπερς`}
-        description={`Ανακαλύψτε τους ${totalArtists} κορυφαίους ανερχόμενους καλλιτέχνες της ελληνικής urban σκηνής. Νέα ταλέντα στην trap και hip hop, με στατιστικά ακροατών και κατάταξη. Η πιο ενημερωμένη λίστα με νέους Έλληνες καλλιτέχνες.`}
+        title={t('discover.seo.title', 'Ανερχόμενοι Καλλιτέχνες 2023 | Newcomers Greece | Ανερχόμενοι Ράπερς')}
+        description={t('discover.seo.description', `Ανακαλύψτε τους ${totalArtists} κορυφαίους ανερχόμενους καλλιτέχνες της ελληνικής urban σκηνής. Νέα ταλέντα στην trap και hip hop, με στατιστικά ακροατών και κατάταξη. Η πιο ενημερωμένη λίστα με νέους Έλληνες καλλιτέχνες.`)}
         type="website"
         keywords={enhancedKeywords}
-        section="Ανερχόμενοι Καλλιτέχνες"
+        section={t('discover.seo.section', 'Ανερχόμενοι Καλλιτέχνες')}
         category="Music Directory"
         tags={[...defaultGenres, ...greekTerms]}
         structuredData={structuredData}
@@ -227,10 +229,12 @@ const ArtistsPage = () => {
           <div className="container mx-auto">
             <div className="flex items-center mb-4">
               <Sparkles className="mr-3 h-7 w-7 text-yellow-400" />
-              <h1 className="text-4xl font-bold text-white">Ανερχόμενοι Καλλιτέχνες | Newcomers Greece</h1>
+              <h1 className="text-4xl font-bold text-white">
+                {t('discover.title', 'Discover Greek Urban Music')}
+              </h1>
             </div>
             <p className="text-lg max-w-3xl text-gray-200 mb-6">
-              Ανακαλύψτε την ζωντανή ελληνική urban σκηνή και γνωρίστε τους επόμενους μεγάλους καλλιτέχνες πριν γίνουν γνωστοί. Όλοι οι ανερχόμενοι ράπερς και τράπερς σε ένα μέρος.
+              {t('discover.subtitle', 'Explore the latest tracks, trending artists, and influential releases shaping Greek urban culture')}
             </p>
           
             <div className="flex flex-wrap gap-2 mt-6">
@@ -241,7 +245,7 @@ const ArtistsPage = () => {
                 onClick={() => handleFilterChange('emerging')}
               >
                 <Star className="h-4 w-4 mr-1" />
-                Νέα Ταλέντα
+                {t('discover.filter.emerging', 'New Talents')}
               </Button>
               <Button 
                 variant={filterView === 'rising' ? "default" : "outline"} 
@@ -250,7 +254,7 @@ const ArtistsPage = () => {
                 onClick={() => handleFilterChange('rising')}
               >
                 <TrendingUp className="h-4 w-4 mr-1" />
-                Ανερχόμενοι
+                {t('discover.filter.rising', 'Rising Stars')}
               </Button>
               <Button 
                 variant={filterView === 'all' ? "default" : "outline"} 
@@ -259,106 +263,68 @@ const ArtistsPage = () => {
                 onClick={() => handleFilterChange('all')}
               >
                 <Users className="h-4 w-4 mr-1" />
-                Όλοι οι Καλλιτέχνες
+                {t('discover.filter.all', 'All Artists')}
               </Button>
+              
+              <div className="ml-auto flex items-center gap-1 text-gray-300 text-sm">
+                <SlidersHorizontal className="h-3 w-3" />
+                <span>{t('discover.filter.listeners', 'Monthly Listeners')}:</span>
+                <span className="font-medium text-white">
+                  {formatNumber(minListeners)}
+                  {maxListeners < Infinity ? ' - ' + formatNumber(maxListeners) : '+'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      
-        <div className="container mx-auto py-8 px-4">
-          <div className="mb-6 bg-dark-card rounded-lg p-4 flex items-center justify-between">
-            <div className="flex items-center">
-              <Filter className="h-5 w-5 text-yellow-400 mr-2" />
-              <span className="text-gray-300">
-                {filteredArtists.length} από {totalArtists} καλλιτέχνες
-                {minListeners > 0 && ` με ${formatNumber(minListeners)}+`}
-                {maxListeners < Infinity && ` έως ${formatNumber(maxListeners)}`} μηνιαίους ακροατές
-              </span>
-            </div>
-          
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center">
-                <span className="text-gray-400 text-sm mr-2">Ταξινόμηση:</span>
-                <Button
-                  variant="outline"
-                  size="sm" 
-                  className="h-8 border-gray-700 text-gray-300"
-                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-                >
-                  {sortDirection === 'asc' ? (
-                    <div className="flex items-center">
-                      <ArrowUp className="h-3 w-3 mr-1" />
-                      <span>Ανερχόμενοι Πρώτα</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center">
-                      <ArrowUp className="h-3 w-3 mr-1 transform rotate-180" />
-                      <span>Δημοφιλείς Πρώτα</span>
-                    </div>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        
+
+        <div className="container mx-auto px-4 py-8">
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
-              <div className="flex items-center space-x-2 text-xl text-gray-300">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span>Φόρτωση καλλιτεχνών...</span>
+              <div className="flex items-center text-gray-400">
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                {t('discover.loading', 'Loading artists...')}
               </div>
             </div>
           ) : error ? (
-            <div className="text-center py-10">
-              <div className="text-red-500 mb-4">{error}</div>
-              <button 
-                onClick={refreshData}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white"
+            <div className="text-center py-12">
+              <p className="text-red-500 mb-4">{t('discover.error', 'Error loading artists')}</p>
+              <Button 
+                onClick={() => refreshData()} 
+                variant="outline"
+                className="border-indigo-500 text-indigo-400 hover:bg-indigo-950"
               >
-                Δοκιμάστε Ξανά
-              </button>
-            </div>
-          ) : filteredArtists.length === 0 ? (
-            <div className="text-center py-10 text-gray-400">
-              <p>Δε βρέθηκαν καλλιτέχνες που να ταιριάζουν με το τρέχον φίλτρο.</p>
+                {t('discover.retry', 'Retry')}
+              </Button>
             </div>
           ) : (
             <>
-              <div className="mb-8">
-                {filterView === 'emerging' && (
-                  <div className="bg-gradient-to-r from-indigo-900/30 to-transparent p-4 rounded-lg mb-6 border border-indigo-800/50">
-                    <h2 className="text-lg font-medium text-indigo-300 mb-2 flex items-center">
-                      <Sparkles className="h-4 w-4 mr-2 text-yellow-400" />
-                      Νέα Ταλέντα στο Προσκήνιο
-                    </h2>
-                    <p className="text-gray-300">
-                      Ανακαλύψτε το επόμενο κύμα Ελλήνων urban καλλιτεχνών που ανεβαίνουν. Αυτά τα νέα ταλέντα αντιπροσωπεύουν το μέλλον της σκηνής.
-                    </p>
-                  </div>
-                )}
-                {filterView === 'rising' && (
-                  <div className="bg-gradient-to-r from-purple-900/30 to-transparent p-4 rounded-lg mb-6 border border-purple-800/50">
-                    <h2 className="text-lg font-medium text-purple-300 mb-2 flex items-center">
-                      <TrendingUp className="h-4 w-4 mr-2 text-yellow-400" />
-                      Ανερχόμενοι Αστέρες
-                    </h2>
-                    <p className="text-gray-300">
-                      Αυτοί οι καλλιτέχνες κάνουν αίσθηση και χτίζουν σημαντικό κοινό. Βρίσκονται σε θέση να ξεχωρίσουν στη mainstream σκηνή σύντομα.
-                    </p>
-                  </div>
-                )}
-              </div>
-            
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {filteredArtists.map((artist) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
+                {filteredArtists.map(artist => (
                   <ArtistCard 
                     key={artist.id} 
                     artist={artist} 
-                    rank={artist.rank}
-                    // Always show rank since it's now global
-                    showRank={true}
                   />
                 ))}
+              </div>
+              
+              {filteredArtists.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-400 mb-4">{t('discover.noResults', 'No results found')}</p>
+                  <Button 
+                    onClick={() => handleFilterChange('all')} 
+                    variant="outline"
+                    className="border-indigo-500 text-indigo-400 hover:bg-indigo-950"
+                  >
+                    {t('discover.showAll', 'Show All Artists')}
+                  </Button>
+                </div>
+              )}
+              
+              <div className="mt-8 flex justify-center">
+                <p className="text-gray-500 text-sm">
+                  {t('discover.stats', 'Showing {0} of {1} artists', filteredArtists.length, totalArtists)}
+                </p>
               </div>
             </>
           )}
@@ -368,4 +334,4 @@ const ArtistsPage = () => {
   );
 };
 
-export default ArtistsPage;
+export default Discover; 
