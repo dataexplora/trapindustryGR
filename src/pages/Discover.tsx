@@ -77,128 +77,123 @@ const Discover = () => {
   ];
 
   // Structured data for music search
-  const structuredData = {
-    '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    '@id': 'https://urbangreece.com/discover',
-    name: 'Ανερχόμενοι Καλλιτέχνες & Newcomers | Urban Greece',
-    description: `Ανακαλύψτε ${totalArtists} ανερχόμενους καλλιτέχνες στην ελληνική urban μουσική σκηνή. Από νέα ταλέντα μέχρι καθιερωμένους καλλιτέχνες στην ελληνική trap και hip hop.`,
-    about: {
-      '@type': 'Thing',
-      name: 'Ελληνική Urban Μουσική',
-      description: 'Η σύγχρονη ελληνική urban μουσική σκηνή, συμπεριλαμβανομένων των ανερχόμενων καλλιτεχνών σε trap, hip-hop και σύγχρονη ελληνική μουσική.'
-    },
-    numberOfItems: totalArtists,
-    genre: defaultGenres,
-    // Add alternateNames for Greek terms
-    alternateNames: greekTerms,
-    // Add breadcrumb
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        {
+  const structuredData = useMemo(() => {
+    // Common properties for both languages
+    const commonData = {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      '@id': 'https://urbangreece.com/discover',
+      numberOfItems: totalArtists,
+      genre: defaultGenres,
+      // Add featured artists
+      mainEntity: {
+        '@type': 'ItemList',
+        itemListElement: allArtists.slice(0, 10).map((artist, index) => ({
           '@type': 'ListItem',
-          position: 1,
+          position: index + 1,
           item: {
-            '@id': 'https://urbangreece.com',
-            name: 'Urban Greece'
+            '@type': 'MusicGroup',
+            '@id': `https://urbangreece.com/artist/${artist.id}`,
+            name: artist.name,
+            image: artist.images?.avatar || '',
+            interactionStatistic: [
+              {
+                '@type': 'InteractionCounter',
+                interactionType: 'https://schema.org/ListenAction',
+                userInteractionCount: artist.monthly_listeners || 0,
+                name: 'Monthly Listeners'
+              },
+              {
+                '@type': 'InteractionCounter',
+                interactionType: 'https://schema.org/FollowAction',
+                userInteractionCount: artist.followers || 0,
+                name: 'Followers'
+              }
+            ],
+            genre: defaultGenres
           }
-        },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          item: {
-            '@id': 'https://urbangreece.com/discover',
-            name: 'Ανερχόμενοι Καλλιτέχνες'
-          }
-        }
-      ]
-    },
-    // Add search action
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: 'https://urbangreece.com/search?q={search_term_string}'
+        }))
       },
-      'query-input': 'required name=search_term_string'
-    },
-    // Add featured artists
-    mainEntity: {
-      '@type': 'ItemList',
-      itemListElement: allArtists.slice(0, 10).map((artist, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        item: {
-          '@type': 'MusicGroup',
-          '@id': `https://urbangreece.com/artist/${artist.id}`,
-          name: artist.name,
-          // Use avatar image from images object
-          image: artist.images?.avatar || '',
-          interactionStatistic: [
+      // Add search action
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: 'https://urbangreece.com/search?q={search_term_string}'
+        },
+        'query-input': 'required name=search_term_string'
+      }
+    };
+
+    // Language-specific properties
+    if (language === 'el') {
+      return {
+        ...commonData,
+        name: 'Ανερχόμενοι Καλλιτέχνες & Newcomers | Urban Greece',
+        description: `Ανακαλύψτε ${totalArtists} ανερχόμενους καλλιτέχνες στην ελληνική urban μουσική σκηνή. Από νέα ταλέντα μέχρι καθιερωμένους καλλιτέχνες στην ελληνική trap και hip hop.`,
+        about: {
+          '@type': 'Thing',
+          name: 'Ελληνική Urban Μουσική',
+          description: 'Η σύγχρονη ελληνική urban μουσική σκηνή, συμπεριλαμβανομένων των ανερχόμενων καλλιτεχνών σε trap, hip-hop και σύγχρονη ελληνική μουσική.'
+        },
+        alternateNames: greekTerms,
+        breadcrumb: {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
             {
-              '@type': 'InteractionCounter',
-              interactionType: 'https://schema.org/ListenAction',
-              userInteractionCount: artist.monthly_listeners || 0,
-              name: 'Monthly Listeners'
+              '@type': 'ListItem',
+              position: 1,
+              item: {
+                '@id': 'https://urbangreece.com',
+                name: 'Urban Greece'
+              }
             },
             {
-              '@type': 'InteractionCounter',
-              interactionType: 'https://schema.org/FollowAction',
-              userInteractionCount: artist.followers || 0,
-              name: 'Followers'
+              '@type': 'ListItem',
+              position: 2,
+              item: {
+                '@id': 'https://urbangreece.com/discover',
+                name: 'Ανερχόμενοι Καλλιτέχνες'
+              }
             }
-          ],
-          // Use default genre since we don't have genre data
-          genre: defaultGenres
+          ]
         }
-      }))
+      };
+    } else {
+      return {
+        ...commonData,
+        name: 'Emerging Artists & Greek Newcomers | Urban Greece',
+        description: `Discover ${totalArtists} emerging artists in the Greek urban music scene. From new talents to established artists in Greek trap and hip hop.`,
+        about: {
+          '@type': 'Thing',
+          name: 'Greek Urban Music',
+          description: 'The contemporary Greek urban music scene, including emerging artists in trap, hip-hop, and modern Greek music.'
+        },
+        alternateNames: ['emerging greek artists', 'greek newcomers', 'rising greek talents'],
+        breadcrumb: {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              item: {
+                '@id': 'https://urbangreece.com',
+                name: 'Urban Greece'
+              }
+            },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              item: {
+                '@id': 'https://urbangreece.com/discover',
+                name: 'Emerging Artists'
+              }
+            }
+          ]
+        }
+      };
     }
-  };
-
-  // Enhanced keywords for discovery including Greek terms
-  const enhancedKeywords = [
-    // Greek terms for emerging artists
-    'ανερχόμενοι καλλιτέχνες',
-    'ανερχόμενοι ράπερς',
-    'ανερχόμενοι τράπερς',
-    'νέοι καλλιτέχνες',
-    'νέα ταλέντα',
-    'newcomers greece',
-    'νέα ελληνική τραπ',
-    'ανερχόμενη ελληνική σκηνή',
-    'ανερχόμενοι έλληνες μουσικοί',
-
-    // English terms
-    'emerging greek artists',
-    'greek newcomers',
-    'rising greek talents',
-    'new greek artists',
-    'greek music',
-    'greek urban music',
-    'greek trap',
-    'greek hip hop',
-    'greek music discovery',
-    'greek music streaming',
-    'greek music charts',
-    'greek music rankings',
-    
-    // Genre combinations with Greek terms
-    ...defaultGenres.map(genre => `ελληνικό ${genre}`),
-    ...defaultGenres.map(genre => `greek ${genre}`),
-    ...defaultGenres.map(genre => `${genre} ανερχόμενοι`),
-    ...defaultGenres.map(genre => `${genre} music greece`),
-    
-    // Artist names
-    ...allArtists.slice(0, 10).map(artist => artist.name),
-    
-    // Brand terms
-    'urban greece',
-    'greek music platform',
-    'greek music statistics',
-    'monthly listeners greece',
-    'greek music followers'
-  ];
+  }, [language, totalArtists, allArtists, defaultGenres, greekTerms]);
 
   // Get the most recent updated timestamp for SEO
   const publishedTimestamp = useMemo(() => {
@@ -209,16 +204,52 @@ const Discover = () => {
     return artistWithTimestamp?.last_updated || new Date().toISOString();
   }, [allArtists]);
 
+  // SEO keywords based on current language
+  const seoKeywords = useMemo(() => {
+    // Base keywords for both languages
+    const baseKeywords = [
+      'urban greece',
+      'greek music',
+      'greek urban music',
+      ...defaultGenres.map(genre => `greek ${genre}`),
+      ...allArtists.slice(0, 10).map(artist => artist.name),
+    ];
+
+    // Additional language-specific keywords
+    if (language === 'el') {
+      return [
+        ...baseKeywords,
+        'ανερχόμενοι καλλιτέχνες',
+        'ανερχόμενοι ράπερς',
+        'νέοι καλλιτέχνες',
+        'νέα ταλέντα',
+        'νέα ελληνική τραπ',
+        'ανερχόμενη ελληνική σκηνή',
+        ...defaultGenres.map(genre => `ελληνικό ${genre}`),
+      ];
+    } else {
+      return [
+        ...baseKeywords,
+        'emerging greek artists',
+        'greek newcomers',
+        'rising greek talents',
+        'new greek artists',
+        'greek music discovery',
+        'greek music streaming',
+      ];
+    }
+  }, [language, allArtists, defaultGenres]);
+
   return (
     <>
       <SEO
-        title={t('discover.seo.title', 'Ανερχόμενοι Καλλιτέχνες 2023 | Newcomers Greece | Ανερχόμενοι Ράπερς')}
-        description={t('discover.seo.description', `Ανακαλύψτε τους ${totalArtists} κορυφαίους ανερχόμενους καλλιτέχνες της ελληνικής urban σκηνής. Νέα ταλέντα στην trap και hip hop, με στατιστικά ακροατών και κατάταξη. Η πιο ενημερωμένη λίστα με νέους Έλληνες καλλιτέχνες.`)}
+        title={t('discover.seo.title', 'Emerging Artists 2023 | Newcomers Greece | Rising Talents')}
+        description={t('discover.seo.description', `Discover the top ${totalArtists} emerging artists in the Greek urban music scene. New talents in trap and hip hop, with listener statistics and rankings.`)}
         type="website"
-        keywords={enhancedKeywords}
-        section={t('discover.seo.section', 'Ανερχόμενοι Καλλιτέχνες')}
+        keywords={seoKeywords}
+        section={t('discover.seo.section', 'Emerging Artists')}
         category="Music Directory"
-        tags={[...defaultGenres, ...greekTerms]}
+        tags={[...defaultGenres, ...(language === 'el' ? greekTerms : [])]}
         structuredData={structuredData}
         publishedAt={publishedTimestamp}
         updatedAt={new Date().toISOString()}

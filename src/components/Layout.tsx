@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { TrendingUp, Instagram, Twitter, Youtube, Menu, X } from 'lucide-react';
+import { TrendingUp, Instagram, Twitter, Youtube, Menu, X, Disc3 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import LanguageToggle from './LanguageToggle';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -172,6 +172,12 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                     Songs
                   </Link>
                 </li>
+                <li>
+                  <Link to="/labels" className={`hover:text-white/80 transition-colors flex items-center ${location.pathname === '/labels' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
+                    <Disc3 className="h-4 w-4 mr-1" />
+                    {t('labels.title', 'Labels')}
+                  </Link>
+                </li>
                 <li className="ml-2">
                   <LanguageToggle />
                 </li>
@@ -219,6 +225,16 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Songs
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      to="/labels" 
+                      className={`text-2xl font-medium flex items-center justify-center ${location.pathname === '/labels' ? 'text-white' : 'text-white/70'}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Disc3 className="h-5 w-5 mr-2" />
+                      {t('labels.title', 'Labels')}
                     </Link>
                   </li>
                   <li className="mt-4">

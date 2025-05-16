@@ -8,33 +8,7 @@ type Translations = {
 };
 
 // All translations for the site
-const translations: Translations = {
-  en: {
-    // Hero section
-    'hero.title': 'The Beat Behind Greek Urban Music',
-    'hero.subtitle': 'A collective of artists, producers, reporters, and visionaries defining the future of Greek urban culture.',
-
-    //Footer section
-    'footer.p1': 'Your premier destination for discovering the vibrant world of Greek urban music. We showcase the best artists, tracks, and emerging talents in the Greek music scene.',
-    'footer.about': 'Urban Greece is the premier platform dedicated to showcasing the vibrant world of Greek urban music. Since 2021, we\'ve been connecting artists, fans, and industry professionals through our commitment to authenticity and innovation.',
-    'footer.copyright': '© {0} Urban Greece. All rights reserved. Celebrating and elevating Greek urban music culture.',
-    
-    // Discover page
-    'discover.title': 'Discover Greek Urban Music',
-    'discover.subtitle': 'Explore the latest tracks, trending artists, and influential releases shaping Greek urban culture',
-    'discover.filter.emerging': 'New Talents',
-    'discover.filter.rising': 'Rising Stars',
-    'discover.filter.all': 'All Artists',
-    'discover.filter.listeners': 'Monthly Listeners',
-    'discover.loading': 'Loading artists...',
-    'discover.error': 'Error loading artists',
-    'discover.retry': 'Retry',
-    'discover.noResults': 'No results found',
-    'discover.showAll': 'Show All Artists',
-    'discover.stats': 'Showing {0} of {1} artists',
-    'discover.seo.title': 'Emerging Artists 2023 | Newcomers Greece | Rising Talents',
-    'discover.seo.description': 'Discover the top {0} emerging artists in the Greek urban music scene. New talents in trap and hip hop, with listener statistics and rankings. The most up-to-date list of new Greek artists.',
-    'discover.seo.section': 'Emerging Artists',
+const translations: Translations = {  en: {    // Hero section    'hero.title': 'The Beat Behind Greek Urban Music',    'hero.subtitle': 'A collective of artists, producers, reporters, and visionaries defining the future of Greek urban culture.',    //Footer section    'footer.p1': 'Your premier destination for discovering the vibrant world of Greek urban music. We showcase the best artists, tracks, and emerging talents in the Greek music scene.',    'footer.about': 'Urban Greece is the premier platform dedicated to showcasing the vibrant world of Greek urban music. Since 2021, we\'ve been connecting artists, fans, and industry professionals through our commitment to authenticity and innovation.',    'footer.copyright': '© {0} Urban Greece. All rights reserved. Celebrating and elevating Greek urban music culture.',        // Discover page    'discover.title': 'Discover Greek Urban Music',    'discover.subtitle': 'Explore the latest tracks, trending artists, and influential releases shaping Greek urban culture',    'discover.filter.emerging': 'New Talents',    'discover.filter.rising': 'Rising Stars',    'discover.filter.all': 'All Artists',    'discover.filter.listeners': 'Monthly Listeners',    'discover.loading': 'Loading artists...',    'discover.error': 'Error loading artists',    'discover.retry': 'Retry',    'discover.noResults': 'No results found',    'discover.showAll': 'Show All Artists',    'discover.stats': 'Showing {0} of {1} artists',    'discover.seo.title': 'Emerging Artists 2023 | Newcomers Greece | Rising Talents',    'discover.seo.description': 'Discover the top {0} emerging artists in the Greek urban music scene. New talents in trap and hip hop, with listener statistics and rankings. The most up-to-date list of new Greek artists.',    'discover.seo.section': 'Emerging Artists',        // Top Artists page    'top.title': 'Hot Artists',    'top.error': 'Failed to load hot artists. Please try again later.',    'top.show': 'Show',    'top.limit.10': 'Top 10',    'top.limit.20': 'Top 20',    'top.limit.50': 'Top 50',    'top.limit.100': 'Top 100',    'top.loading': 'Loading hot artists...',    'top.tryAgain': 'Try Again',    'top.noArtists': 'No artists found in the database.',    'top.section': 'Hot Artists',    'top.category': 'Music Artists',        // Labels page    'labels.title': 'Record Labels',    'labels.subtitle': 'The companies shaping the Greek urban music landscape and their impact on the industry.',    'labels.loading': 'Loading label data...',    'labels.tryAgain': 'Try Again',    'labels.section': 'Record Labels',    'labels.category': 'Music Industry',    'labels.selectLabel': 'Select a label to view details',        'labels.list.title': 'Labels',    'labels.list.marketShare': 'Market Share',        'labels.independent.title': 'Independent',    'labels.independent.tag': 'Self-released',    'labels.independent.description': 'Releases by artists without a traditional record label',    'labels.independent.info': 'This category includes releases where artists use their own name (or variations of it) as a label. This is common in the trap and hip-hop scene, where artists often release music independently.',    'labels.independent.banner': 'The "Independent" category includes releases where artists use their own name as a label.',        'labels.details.overview': 'Overview',    'labels.details.releases': 'Releases',    'labels.details.allReleases': 'All Releases',        'labels.stats.albums': 'Albums',    'labels.stats.artists': 'Artists',    'labels.stats.tracks': 'Tracks',    'labels.stats.track': 'track',    'labels.stats.activeYears': 'Active Years',    'labels.stats.marketShare': 'market share',    'labels.stats.ofActiveArtists': 'of active artists',    'labels.stats.averageTracks': 'avg. {0}/album',    'labels.stats.releaseTimeline': 'Release Timeline',    'labels.stats.chartComingSoon': 'Release timeline visualization coming soon',    'labels.stats.latestReleases': 'Latest Releases',    'labels.stats.noReleasesFound': 'No releases found for this label',        'labels.actions.listenSpotify': 'Listen on Spotify',
     
     // About section
     'about.ourStory.title': 'Our Story',
@@ -182,32 +156,7 @@ const translations: Translations = {
     'terms.contact.text': 'If you have any questions about these Terms, please contact us at:',
     'terms.contact.email': 'Email: contact@urbangreece.com',
   },
-  el: {
-    // Hero section
-    'hero.title': 'Ο παλμός πίσω από την Ελληνική Urban Μουσική',
-    'hero.subtitle': 'Μια συλλογική ομάδα καλλιτεχνών, παραγωγών, δημοσιογράφων και οραματιστών που καθορίζει το μέλλον της ελληνικής urban κουλτούρας.',
-    
-    //Footer section
-    'footer.p1': 'Ο πρώτος σας προορισμός για να ανακαλύψετε τον ζωντανό κόσμο της ελληνικής urban μουσικής. Παρουσιάζουμε τους καλύτερους καλλιτέχνες, κομμάτια και ανερχόμενα ταλέντα της ελληνικής μουσικής σκηνής.',
-    'footer.about': 'Το Urban Greece είναι η κορυφαία πλατφόρμα αφιερωμένη στην ανάδειξη του ζωντανού κόσμου της ελληνικής urban μουσικής. Από το 2021, συνδέουμε καλλιτέχνες, θαυμαστές και επαγγελματίες της βιομηχανίας μέσω της δέσμευσής μας στην αυθεντικότητα και την καινοτομία.',
-    'footer.copyright': '© {0} Urban Greece. Όλα τα δικαιώματα διατηρούνται. Γιορτάζουμε και αναδεικνύουμε την ελληνική urban μουσική κουλτούρα.',
-    
-    // Discover page
-    'discover.title': 'Ανακαλύψτε την Ελληνική Urban Μουσική',
-    'discover.subtitle': 'Εξερευνήστε τα τελευταία κομμάτια, τους καλλιτέχνες σε άνοδο και τις επιδραστικές κυκλοφορίες που διαμορφώνουν την ελληνική urban κουλτούρα',
-    'discover.filter.emerging': 'Νέα Ταλέντα',
-    'discover.filter.rising': 'Ανερχόμενα Αστέρια',
-    'discover.filter.all': 'Όλοι οι Καλλιτέχνες',
-    'discover.filter.listeners': 'Μηνιαίοι Ακροατές',
-    'discover.loading': 'Φόρτωση καλλιτεχνών...',
-    'discover.error': 'Σφάλμα φόρτωσης καλλιτεχνών',
-    'discover.retry': 'Προσπαθήστε ξανά',
-    'discover.noResults': 'Δεν βρέθηκαν αποτελέσματα',
-    'discover.showAll': 'Προβολή Όλων των Καλλιτεχνών',
-    'discover.stats': 'Εμφάνιση {0} από {1} καλλιτέχνες',
-    'discover.seo.title': 'Ανερχόμενοι Καλλιτέχνες 2023 | Newcomers Greece | Ανερχόμενοι Ράπερς',
-    'discover.seo.description': 'Ανακαλύψτε τους {0} κορυφαίους ανερχόμενους καλλιτέχνες της ελληνικής urban σκηνής. Νέα ταλέντα στην trap και hip hop, με στατιστικά ακροατών και κατάταξη. Η πιο ενημερωμένη λίστα με νέους Έλληνες καλλιτέχνες.',
-    'discover.seo.section': 'Ανερχόμενοι Καλλιτέχνες',
+    el: {    // Hero section    'hero.title': 'Ο παλμός πίσω από την Ελληνική Urban Μουσική',    'hero.subtitle': 'Μια συλλογική ομάδα καλλιτεχνών, παραγωγών, δημοσιογράφων και οραματιστών που καθορίζει το μέλλον της ελληνικής urban κουλτούρας.',        //Footer section    'footer.p1': 'Ο πρώτος σας προορισμός για να ανακαλύψετε τον ζωντανό κόσμο της ελληνικής urban μουσικής. Παρουσιάζουμε τους καλύτερους καλλιτέχνες, κομμάτια και ανερχόμενα ταλέντα της ελληνικής μουσικής σκηνής.',    'footer.about': 'Το Urban Greece είναι η κορυφαία πλατφόρμα αφιερωμένη στην ανάδειξη του ζωντανού κόσμου της ελληνικής urban μουσικής. Από το 2021, συνδέουμε καλλιτέχνες, θαυμαστές και επαγγελματίες της βιομηχανίας μέσω της δέσμευσής μας στην αυθεντικότητα και την καινοτομία.',    'footer.copyright': '© {0} Urban Greece. Όλα τα δικαιώματα διατηρούνται. Γιορτάζουμε και αναδεικνύουμε την ελληνική urban μουσική κουλτούρα.',        // Discover page    'discover.title': 'Ανακαλύψτε την Ελληνική Urban Μουσική',    'discover.subtitle': 'Εξερευνήστε τα τελευταία κομμάτια, τους καλλιτέχνες σε άνοδο και τις επιδραστικές κυκλοφορίες που διαμορφώνουν την ελληνική urban κουλτούρα',    'discover.filter.emerging': 'Νέα Ταλέντα',    'discover.filter.rising': 'Ανερχόμενα Αστέρια',    'discover.filter.all': 'Όλοι οι Καλλιτέχνες',    'discover.filter.listeners': 'Μηνιαίοι Ακροατές',    'discover.loading': 'Φόρτωση καλλιτεχνών...',    'discover.error': 'Σφάλμα φόρτωσης καλλιτεχνών',    'discover.retry': 'Προσπαθήστε ξανά',    'discover.noResults': 'Δεν βρέθηκαν αποτελέσματα',    'discover.showAll': 'Προβολή Όλων των Καλλιτεχνών',    'discover.stats': 'Εμφάνιση {0} από {1} καλλιτέχνες',    'discover.seo.title': 'Ανερχόμενοι Καλλιτέχνες 2023 | Newcomers Greece | Ανερχόμενοι Ράπερς',    'discover.seo.description': 'Ανακαλύψτε τους {0} κορυφαίους ανερχόμενους καλλιτέχνες της ελληνικής urban σκηνής. Νέα ταλέντα στην trap και hip hop, με στατιστικά ακροατών και κατάταξη. Η πιο ενημερωμένη λίστα με νέους Έλληνες καλλιτέχνες.',    'discover.seo.section': 'Ανερχόμενοι Καλλιτέχνες',        // Top Artists page    'top.title': 'Δημοφιλείς Καλλιτέχνες',    'top.error': 'Αποτυχία φόρτωσης δημοφιλών καλλιτεχνών. Παρακαλώ δοκιμάστε ξανά αργότερα.',    'top.show': 'Προβολή',    'top.limit.10': 'Top 10',    'top.limit.20': 'Top 20',    'top.limit.50': 'Top 50',    'top.limit.100': 'Top 100',    'top.loading': 'Φόρτωση δημοφιλών καλλιτεχνών...',    'top.tryAgain': 'Δοκιμάστε ξανά',    'top.noArtists': 'Δεν βρέθηκαν καλλιτέχνες στη βάση δεδομένων.',    'top.section': 'Δημοφιλείς Καλλιτέχνες',    'top.category': 'Μουσικοί Καλλιτέχνες',        // Labels page    'labels.title': 'Δισκογραφικές Εταιρείες',    'labels.subtitle': 'Οι εταιρείες που διαμορφώνουν το ελληνικό urban μουσικό τοπίο και ο αντίκτυπός τους στη βιομηχανία.',    'labels.loading': 'Φόρτωση δεδομένων δισκογραφικών...',    'labels.tryAgain': 'Δοκιμάστε ξανά',    'labels.section': 'Δισκογραφικές Εταιρείες',    'labels.category': 'Μουσική Βιομηχανία',    'labels.selectLabel': 'Επιλέξτε μια δισκογραφική για προβολή λεπτομερειών',        'labels.list.title': 'Δισκογραφικές',    'labels.list.marketShare': 'Μερίδιο Αγοράς',        'labels.independent.title': 'Ανεξάρτητες',    'labels.independent.tag': 'Ανεξάρτητες κυκλοφορίες',    'labels.independent.description': 'Κυκλοφορίες από καλλιτέχνες χωρίς παραδοσιακή δισκογραφική εταιρεία',    'labels.independent.info': 'Σε αυτή την κατηγορία περιλαμβάνονται κυκλοφορίες όπου οι καλλιτέχνες χρησιμοποιούν το όνομά τους (ή παραλλαγές του) ως δισκογραφική εταιρεία. Αυτό είναι σύνηθες φαινόμενο στον χώρο της trap και του hip-hop, όπου οι καλλιτέχνες συχνά δημοσιεύουν τη μουσική τους ανεξάρτητα.',    'labels.independent.banner': 'Στην κατηγορία "Independent" περιλαμβάνονται κυκλοφορίες όπου ο καλλιτέχνης χρησιμοποιεί το όνομά του ως δισκογραφική.',        'labels.details.overview': 'Επισκόπηση',    'labels.details.releases': 'Κυκλοφορίες',    'labels.details.allReleases': 'Όλες οι Κυκλοφορίες',        'labels.stats.albums': 'Άλμπουμ',    'labels.stats.artists': 'Καλλιτέχνες',    'labels.stats.tracks': 'Κομμάτια',    'labels.stats.track': 'κομμάτι',    'labels.stats.activeYears': 'Ενεργά Έτη',    'labels.stats.marketShare': 'μερίδιο αγοράς',    'labels.stats.ofActiveArtists': 'των ενεργών καλλιτεχνών',    'labels.stats.averageTracks': 'μ.ό. {0}/άλμπουμ',    'labels.stats.releaseTimeline': 'Χρονολόγιο Κυκλοφοριών',    'labels.stats.chartComingSoon': 'Η οπτικοποίηση του χρονολογίου κυκλοφοριών έρχεται σύντομα',    'labels.stats.latestReleases': 'Πρόσφατες Κυκλοφορίες',    'labels.stats.noReleasesFound': 'Δεν βρέθηκαν κυκλοφορίες για αυτή τη δισκογραφική',        'labels.actions.listenSpotify': 'Ακρόαση στο Spotify',
     
     // About section
     'about.ourStory.title': 'Η Ιστορία μας',

@@ -9,6 +9,7 @@ import HomePage from "./pages/HomePage";
 import Discover from "./pages/Discover";
 import TopArtistsPage from "./pages/TopArtistsPage";
 import SongsPage from "./pages/SongsPage";
+import LabelsPage from "./pages/LabelsPage";
 import ArtistDetailPage from "./pages/ArtistDetailPage";
 import TrackDetailPage from "./pages/TrackDetailPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/discover" element={<Discover />} />
               <Route path="/hot-artists" element={<TopArtistsPage />} />
               <Route path="/songs" element={<SongsPage />} />
+              <Route path="/labels" element={<LabelsPage />} />
               <Route path="/artist/:id" element={<ArtistDetailPage />} />
               <Route path="/track/:id" element={<TrackDetailPage />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
