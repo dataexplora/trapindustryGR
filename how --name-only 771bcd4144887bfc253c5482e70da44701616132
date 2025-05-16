@@ -1,0 +1,17 @@
+[33mcommit 771bcd4144887bfc253c5482e70da44701616132[m[33m ([m[1;32mintegration[m[33m)[m
+Author: dataexplora <dataexploragreece@gmail.com>
+Date:   Fri May 16 02:00:01 2025 +0300
+
+    added SEO tags schema.org, optimized images, improved SEO, added titles and descriptions, H1 for homepage
+
+index.html
+public/assets/images/icon.png
+public/assets/images/icon.webp
+public/assets/images/logo.png
+public/assets/images/logo.webp
+public/favicons/favicon-16x16.png
+public/favicons/favicon-32x32.png
+src/components/Layout.tsx
+src/components/SEO.tsx
+src/pages/HomePage.tsx
+src/pages/TopArtistsPage.tsx

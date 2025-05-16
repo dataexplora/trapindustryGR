@@ -19,7 +19,11 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const recaptchaRef = useRef<HTMLDivElement>(null);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     // Load reCAPTCHA script
@@ -123,7 +127,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen" key={`layout-${language}`}>
       <header className="bg-gradient-to-r from-indigo-900 to-purple-900 text-white py-7 shadow-lg relative">
         <div className="container mx-auto px-4">
           {/* Mobile Menu Button */}
@@ -278,35 +282,35 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
             {/* Quick Links Section */}
             <div className="text-center grid grid-cols-2 gap-4">
               <div>
-                <h4 className="font-semibold mb-4">Navigation</h4>
+                <h4 className="font-semibold mb-4">{t('navigation', 'Navigation')}</h4>
                 <nav className="flex flex-col space-y-2">
-                  <Link to="/" className="text-gray-400 hover:text-white transition-colors">Home</Link>
-                  <Link to="/discover" className="text-gray-400 hover:text-white transition-colors">Discover</Link>
-                  <Link to="/hot-artists" className="text-gray-400 hover:text-white transition-colors">Hot Artists</Link>
-                  <Link to="/songs" className="text-gray-400 hover:text-white transition-colors">Songs</Link>
+                  <Link to="/" className="text-gray-400 hover:text-white transition-colors">{t('nav.home', 'Home')}</Link>
+                  <Link to="/discover" className="text-gray-400 hover:text-white transition-colors">{t('nav.discover', 'Discover')}</Link>
+                  <Link to="/hot-artists" className="text-gray-400 hover:text-white transition-colors">{t('nav.hot_artists', 'Hot Artists')}</Link>
+                  <Link to="/songs" className="text-gray-400 hover:text-white transition-colors">{t('nav.songs', 'Songs')}</Link>
                 </nav>
               </div>
               <div>
-                <h4 className="font-semibold mb-4">Resources</h4>
+                <h4 className="font-semibold mb-4">{t('resources', 'Resources')}</h4>
                 <nav className="flex flex-col space-y-2">
-                  <Link to="/about" className="text-gray-400 hover:text-white transition-colors">About Us</Link>
-                  <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</Link>
-                  <Link to="/terms" className="text-gray-400 hover:text-white transition-colors">Terms of Use</Link>
-                  <Link to="/contact" className="text-gray-400 hover:text-white transition-colors">Contact Us</Link>
+                  <Link to="/about" className="text-gray-400 hover:text-white transition-colors">{t('about.us', 'About Us')}</Link>
+                  <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">{t('privacy.title', 'Privacy Policy')}</Link>
+                  <Link to="/terms" className="text-gray-400 hover:text-white transition-colors">{t('terms.title', 'Terms of Use')}</Link>
+                  <Link to="/contact" className="text-gray-400 hover:text-white transition-colors">{t('contact.us', 'Contact Us')}</Link>
                 </nav>
               </div>
             </div>
             
             {/* Connect Section */}
             <div className="text-center md:text-right">
-              <h4 className="font-semibold mb-4">Stay Updated</h4>
-              <p className="text-gray-400 text-sm mb-4">Subscribe to our newsletter for the latest updates in Greek urban music.</p>
+              <h4 className="font-semibold mb-4">{t('footer.stay_updated', 'Stay Updated')}</h4>
+              <p className="text-gray-400 text-sm mb-4">{t('footer.subscribe_text', 'Subscribe to our newsletter for the latest updates in Greek urban music.')}</p>
               <form onSubmit={showCaptcha ? handleNewsletterSubmit : handleInitialSubmit} className="flex flex-col space-y-3">
                 <input 
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email" 
+                  placeholder={t('footer.email_placeholder', 'Enter your email')} 
                   className="bg-gray-800 text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
                   required
                 />
@@ -316,14 +320,14 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                   className={`bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded transition-all
                     ${subscriptionStatus === 'loading' ? 'opacity-70 cursor-not-allowed' : 'hover:opacity-90'}`}
                 >
-                  {subscriptionStatus === 'loading' ? 'Subscribing...' : 
-                   subscriptionStatus === 'success' ? 'Subscribed!' : 
-                   subscriptionStatus === 'error' ? 'Try Again' : 
-                   showCaptcha ? 'Complete Verification' : 'Subscribe'}
+                  {subscriptionStatus === 'loading' ? t('footer.subscribing', 'Subscribing...') : 
+                   subscriptionStatus === 'success' ? t('footer.subscribed', 'Subscribed!') : 
+                   subscriptionStatus === 'error' ? t('footer.try_again', 'Try Again') : 
+                   showCaptcha ? t('footer.complete_verification', 'Complete Verification') : t('footer.subscribe', 'Subscribe')}
                 </button>
                 {/* Status messages */}
                 {subscriptionStatus === 'success' && (
-                  <p className="text-green-500 text-sm">Thanks for subscribing!</p>
+                  <p className="text-green-500 text-sm">{t('footer.thanks', 'Thanks for subscribing!')}</p>
                 )}
                 {subscriptionStatus === 'error' && (
                   <p className="text-red-500 text-sm">{errorMessage}</p>

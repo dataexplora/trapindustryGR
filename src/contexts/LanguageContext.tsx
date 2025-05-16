@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
 
 // Define the translations
 type Translations = {
@@ -8,7 +8,112 @@ type Translations = {
 };
 
 // All translations for the site
-const translations: Translations = {  en: {    // Hero section    'hero.title': 'The Beat Behind Greek Urban Music',    'hero.subtitle': 'A collective of artists, producers, reporters, and visionaries defining the future of Greek urban culture.',    //Footer section    'footer.p1': 'Your premier destination for discovering the vibrant world of Greek urban music. We showcase the best artists, tracks, and emerging talents in the Greek music scene.',    'footer.about': 'Urban Greece is the premier platform dedicated to showcasing the vibrant world of Greek urban music. Since 2021, we\'ve been connecting artists, fans, and industry professionals through our commitment to authenticity and innovation.',    'footer.copyright': '© {0} Urban Greece. All rights reserved. Celebrating and elevating Greek urban music culture.',        // Discover page    'discover.title': 'Discover Greek Urban Music',    'discover.subtitle': 'Explore the latest tracks, trending artists, and influential releases shaping Greek urban culture',    'discover.filter.emerging': 'New Talents',    'discover.filter.rising': 'Rising Stars',    'discover.filter.all': 'All Artists',    'discover.filter.listeners': 'Monthly Listeners',    'discover.loading': 'Loading artists...',    'discover.error': 'Error loading artists',    'discover.retry': 'Retry',    'discover.noResults': 'No results found',    'discover.showAll': 'Show All Artists',    'discover.stats': 'Showing {0} of {1} artists',    'discover.seo.title': 'Emerging Artists 2023 | Newcomers Greece | Rising Talents',    'discover.seo.description': 'Discover the top {0} emerging artists in the Greek urban music scene. New talents in trap and hip hop, with listener statistics and rankings. The most up-to-date list of new Greek artists.',    'discover.seo.section': 'Emerging Artists',        // Top Artists page    'top.title': 'Hot Artists',    'top.error': 'Failed to load hot artists. Please try again later.',    'top.show': 'Show',    'top.limit.10': 'Top 10',    'top.limit.20': 'Top 20',    'top.limit.50': 'Top 50',    'top.limit.100': 'Top 100',    'top.loading': 'Loading hot artists...',    'top.tryAgain': 'Try Again',    'top.noArtists': 'No artists found in the database.',    'top.section': 'Hot Artists',    'top.category': 'Music Artists',        // Labels page    'labels.title': 'Record Labels',    'labels.subtitle': 'The companies shaping the Greek urban music landscape and their impact on the industry.',    'labels.loading': 'Loading label data...',    'labels.tryAgain': 'Try Again',    'labels.section': 'Record Labels',    'labels.category': 'Music Industry',    'labels.selectLabel': 'Select a label to view details',        'labels.list.title': 'Labels',    'labels.list.marketShare': 'Market Share',        'labels.independent.title': 'Independent',    'labels.independent.tag': 'Self-released',    'labels.independent.description': 'Releases by artists without a traditional record label',    'labels.independent.info': 'This category includes releases where artists use their own name (or variations of it) as a label. This is common in the trap and hip-hop scene, where artists often release music independently.',    'labels.independent.banner': 'The "Independent" category includes releases where artists use their own name as a label.',        'labels.details.overview': 'Overview',    'labels.details.releases': 'Releases',    'labels.details.allReleases': 'All Releases',        'labels.stats.albums': 'Albums',    'labels.stats.artists': 'Artists',    'labels.stats.tracks': 'Tracks',    'labels.stats.track': 'track',    'labels.stats.activeYears': 'Active Years',    'labels.stats.marketShare': 'market share',    'labels.stats.ofActiveArtists': 'of active artists',    'labels.stats.averageTracks': 'avg. {0}/album',    'labels.stats.releaseTimeline': 'Release Timeline',    'labels.stats.chartComingSoon': 'Release timeline visualization coming soon',    'labels.stats.latestReleases': 'Latest Releases',    'labels.stats.noReleasesFound': 'No releases found for this label',        'labels.actions.listenSpotify': 'Listen on Spotify',
+const translations: Translations = {  en: {    
+    // Hero section    
+    'hero.title': 'The Beat Behind Greek Urban Music',    
+    'hero.subtitle': 'A collective of artists, producers, reporters, and visionaries defining the future of Greek urban culture.',   
+    //Footer section    
+    'footer.p1': 'Your premier destination for discovering the vibrant world of Greek urban music. We showcase the best artists, tracks, and emerging talents in the Greek music scene.',    
+    'footer.about': 'Urban Greece is the premier platform dedicated to showcasing the vibrant world of Greek urban music. Since 2021, we\'ve been connecting artists, fans, and industry professionals through our commitment to authenticity and innovation.',    
+    'footer.copyright': '© {0} Urban Greece. All rights reserved. Celebrating and elevating Greek urban music culture.',    
+    'footer.address': 'Athens, Greece',    
+    'footer.email': 'contact@urbangreece.com',    
+    'footer.stay_updated': 'Stay Updated',    
+    'footer.subscribe_text': 
+    'Subscribe to our newsletter for the latest updates in Greek urban music.',    
+    'footer.email_placeholder': 'Enter your email',    
+    'footer.subscribing': 'Subscribing...',    
+    'footer.subscribed': 'Subscribed!',    
+    'footer.try_again': 'Try Again',    
+    'footer.complete_verification': 'Complete Verification',    
+    'footer.subscribe': 'Subscribe',    
+    'footer.thanks': 'Thanks for subscribing!',    
+    'footer.follow_us': 'Follow Us',    
+    'footer.powered_by': 'Powered by',    
+    'navigation': 'Navigation',    
+    'resources': 'Resources',    
+    'nav.home': 'Home',    
+    'nav.discover': 'Discover',    
+    'nav.hot_artists': 'Hot Artists',    
+    'nav.songs': 'Songs',    
+    'about.us': 'About Us',    
+    'privacy.title': 'Privacy Policy',    
+    'terms.title': 'Terms of Use',    
+    'contact.us': 'Contact Us',
+
+    // Discover page    
+    'discover.title': 'Discover Greek Urban Music',    
+    'discover.subtitle': 'Explore the latest tracks, trending artists, and influential releases shaping Greek urban culture',    
+    'discover.filter.emerging': 'New Talents',    
+    'discover.filter.rising': 'Rising Stars',    
+    'discover.filter.all': 'All Artists',    
+    'discover.filter.listeners': 'Monthly Listeners',    
+    'discover.loading': 'Loading artists...',    
+    'discover.error': 'Error loading artists',    
+    'discover.retry': 'Retry',    
+    'discover.noResults': 'No results found',    
+    'discover.showAll': 'Show All Artists',    
+    'discover.stats': 'Showing {0} of {1} artists',    
+    'discover.stats.with': 'with',    
+    'discover.stats.to': 'to',    
+    'discover.sort.label': 'Sort',    
+    'discover.sort.emerging': 'Emerging First',    
+    'discover.sort.popular': 'Popular First',    
+    'discover.emerging.title': 'Emerging Talent Spotlight',    
+    'discover.emerging.description': 'Discover the next wave of Greek urban artists on the rise. These emerging talents represent the future of the scene.',   
+    'discover.rising.title': 'Rising Stars',    
+    'discover.rising.description': 'These artists are making waves and building significant audiences. They\'re positioned to break into the mainstream soon.',    
+    'discover.all.title': 'All Greek Urban Artists',    
+    'discover.all.description': 'Browse the complete collection of Greek urban artists, from underground talents to mainstream stars.',    
+    'discover.seo.title': 'Emerging Artists 2023 | Newcomers Greece | Rising Talents',    
+    'discover.seo.description': 'Discover the top {0} emerging artists in the Greek urban music scene. New talents in trap and hip hop, with listener statistics and rankings. The most up-to-date list of new Greek artists.',    
+    'discover.seo.section': 'Emerging Artists',        
+    
+    // Top Artists page    
+    'top.title': 'Hot Artists',    
+    'top.error': 'Failed to load hot artists. Please try again later.',    
+    'top.show': 'Show',    
+    'top.limit.10': 'Top 10',    
+    'top.limit.20': 'Top 20',    
+    'top.limit.50': 'Top 50',    
+    'top.limit.100': 'Top 100',    
+    'top.loading': 'Loading hot artists...',    
+    'top.tryAgain': 'Try Again',    
+    'top.noArtists': 'No artists found in the database.',    
+    'top.section': 'Hot Artists',    
+    'top.category': 'Music Artists',        
+    
+    // Labels page    
+    'labels.title': 'Record Labels',    
+    'labels.subtitle': 'The companies shaping the Greek urban music landscape and their impact on the industry.',    
+    'labels.loading': 'Loading label data...',    
+    'labels.tryAgain': 'Try Again',    
+    'labels.section': 'Record Labels',    
+    'labels.category': 'Music Industry',    
+    'labels.selectLabel': 'Select a label to view details',        
+    'labels.list.title': 'Labels',    
+    'labels.list.marketShare': 'Market Share',        
+    'labels.independent.title': 'Independent',    
+    'labels.independent.tag': 'Self-released',    
+    'labels.independent.description': 'Releases by artists without a traditional record label',    
+    'labels.independent.info': 'This category includes releases where artists use their own name (or variations of it) as a label. This is common in the trap and hip-hop scene, where artists often release music independently.',    
+    'labels.independent.banner': 'The "Independent" category includes releases where artists use their own name as a label.',        
+    'labels.details.overview': 'Overview',    
+    'labels.details.releases': 'Releases',    
+    'labels.details.allReleases': 'All Releases',        
+    'labels.stats.albums': 'Albums',    
+    'labels.stats.artists': 'Artists',    
+    'labels.stats.tracks': 'Tracks',    
+    'labels.stats.track': 'track',    
+    'labels.stats.activeYears': 'Active Years',    
+    'labels.stats.marketShare': 'market share',    
+    'labels.stats.ofActiveArtists': 'of active artists',    
+    'labels.stats.averageTracks': 'avg. {0}/album',    
+    'labels.stats.releaseTimeline': 'Release Timeline',    
+    'labels.stats.chartComingSoon': 'Release timeline visualization coming soon',    
+    'labels.stats.latestReleases': 'Latest Releases',    
+    'labels.stats.noReleasesFound': 'No releases found for this label',        
+    'labels.actions.listenSpotify': 'Listen on Spotify',
     
     // About section
     'about.ourStory.title': 'Our Story',
@@ -156,12 +261,116 @@ const translations: Translations = {  en: {    // Hero section    'hero.title': 
     'terms.contact.text': 'If you have any questions about these Terms, please contact us at:',
     'terms.contact.email': 'Email: contact@urbangreece.com',
   },
-    el: {    // Hero section    'hero.title': 'Ο παλμός πίσω από την Ελληνική Urban Μουσική',    'hero.subtitle': 'Μια συλλογική ομάδα καλλιτεχνών, παραγωγών, δημοσιογράφων και οραματιστών που καθορίζει το μέλλον της ελληνικής urban κουλτούρας.',        //Footer section    'footer.p1': 'Ο πρώτος σας προορισμός για να ανακαλύψετε τον ζωντανό κόσμο της ελληνικής urban μουσικής. Παρουσιάζουμε τους καλύτερους καλλιτέχνες, κομμάτια και ανερχόμενα ταλέντα της ελληνικής μουσικής σκηνής.',    'footer.about': 'Το Urban Greece είναι η κορυφαία πλατφόρμα αφιερωμένη στην ανάδειξη του ζωντανού κόσμου της ελληνικής urban μουσικής. Από το 2021, συνδέουμε καλλιτέχνες, θαυμαστές και επαγγελματίες της βιομηχανίας μέσω της δέσμευσής μας στην αυθεντικότητα και την καινοτομία.',    'footer.copyright': '© {0} Urban Greece. Όλα τα δικαιώματα διατηρούνται. Γιορτάζουμε και αναδεικνύουμε την ελληνική urban μουσική κουλτούρα.',        // Discover page    'discover.title': 'Ανακαλύψτε την Ελληνική Urban Μουσική',    'discover.subtitle': 'Εξερευνήστε τα τελευταία κομμάτια, τους καλλιτέχνες σε άνοδο και τις επιδραστικές κυκλοφορίες που διαμορφώνουν την ελληνική urban κουλτούρα',    'discover.filter.emerging': 'Νέα Ταλέντα',    'discover.filter.rising': 'Ανερχόμενα Αστέρια',    'discover.filter.all': 'Όλοι οι Καλλιτέχνες',    'discover.filter.listeners': 'Μηνιαίοι Ακροατές',    'discover.loading': 'Φόρτωση καλλιτεχνών...',    'discover.error': 'Σφάλμα φόρτωσης καλλιτεχνών',    'discover.retry': 'Προσπαθήστε ξανά',    'discover.noResults': 'Δεν βρέθηκαν αποτελέσματα',    'discover.showAll': 'Προβολή Όλων των Καλλιτεχνών',    'discover.stats': 'Εμφάνιση {0} από {1} καλλιτέχνες',    'discover.seo.title': 'Ανερχόμενοι Καλλιτέχνες 2023 | Newcomers Greece | Ανερχόμενοι Ράπερς',    'discover.seo.description': 'Ανακαλύψτε τους {0} κορυφαίους ανερχόμενους καλλιτέχνες της ελληνικής urban σκηνής. Νέα ταλέντα στην trap και hip hop, με στατιστικά ακροατών και κατάταξη. Η πιο ενημερωμένη λίστα με νέους Έλληνες καλλιτέχνες.',    'discover.seo.section': 'Ανερχόμενοι Καλλιτέχνες',        // Top Artists page    'top.title': 'Δημοφιλείς Καλλιτέχνες',    'top.error': 'Αποτυχία φόρτωσης δημοφιλών καλλιτεχνών. Παρακαλώ δοκιμάστε ξανά αργότερα.',    'top.show': 'Προβολή',    'top.limit.10': 'Top 10',    'top.limit.20': 'Top 20',    'top.limit.50': 'Top 50',    'top.limit.100': 'Top 100',    'top.loading': 'Φόρτωση δημοφιλών καλλιτεχνών...',    'top.tryAgain': 'Δοκιμάστε ξανά',    'top.noArtists': 'Δεν βρέθηκαν καλλιτέχνες στη βάση δεδομένων.',    'top.section': 'Δημοφιλείς Καλλιτέχνες',    'top.category': 'Μουσικοί Καλλιτέχνες',        // Labels page    'labels.title': 'Δισκογραφικές Εταιρείες',    'labels.subtitle': 'Οι εταιρείες που διαμορφώνουν το ελληνικό urban μουσικό τοπίο και ο αντίκτυπός τους στη βιομηχανία.',    'labels.loading': 'Φόρτωση δεδομένων δισκογραφικών...',    'labels.tryAgain': 'Δοκιμάστε ξανά',    'labels.section': 'Δισκογραφικές Εταιρείες',    'labels.category': 'Μουσική Βιομηχανία',    'labels.selectLabel': 'Επιλέξτε μια δισκογραφική για προβολή λεπτομερειών',        'labels.list.title': 'Δισκογραφικές',    'labels.list.marketShare': 'Μερίδιο Αγοράς',        'labels.independent.title': 'Ανεξάρτητες',    'labels.independent.tag': 'Ανεξάρτητες κυκλοφορίες',    'labels.independent.description': 'Κυκλοφορίες από καλλιτέχνες χωρίς παραδοσιακή δισκογραφική εταιρεία',    'labels.independent.info': 'Σε αυτή την κατηγορία περιλαμβάνονται κυκλοφορίες όπου οι καλλιτέχνες χρησιμοποιούν το όνομά τους (ή παραλλαγές του) ως δισκογραφική εταιρεία. Αυτό είναι σύνηθες φαινόμενο στον χώρο της trap και του hip-hop, όπου οι καλλιτέχνες συχνά δημοσιεύουν τη μουσική τους ανεξάρτητα.',    'labels.independent.banner': 'Στην κατηγορία "Independent" περιλαμβάνονται κυκλοφορίες όπου ο καλλιτέχνης χρησιμοποιεί το όνομά του ως δισκογραφική.',        'labels.details.overview': 'Επισκόπηση',    'labels.details.releases': 'Κυκλοφορίες',    'labels.details.allReleases': 'Όλες οι Κυκλοφορίες',        'labels.stats.albums': 'Άλμπουμ',    'labels.stats.artists': 'Καλλιτέχνες',    'labels.stats.tracks': 'Κομμάτια',    'labels.stats.track': 'κομμάτι',    'labels.stats.activeYears': 'Ενεργά Έτη',    'labels.stats.marketShare': 'μερίδιο αγοράς',    'labels.stats.ofActiveArtists': 'των ενεργών καλλιτεχνών',    'labels.stats.averageTracks': 'μ.ό. {0}/άλμπουμ',    'labels.stats.releaseTimeline': 'Χρονολόγιο Κυκλοφοριών',    'labels.stats.chartComingSoon': 'Η οπτικοποίηση του χρονολογίου κυκλοφοριών έρχεται σύντομα',    'labels.stats.latestReleases': 'Πρόσφατες Κυκλοφορίες',    'labels.stats.noReleasesFound': 'Δεν βρέθηκαν κυκλοφορίες για αυτή τη δισκογραφική',        'labels.actions.listenSpotify': 'Ακρόαση στο Spotify',
+    el: {    
+    
+    // Hero section    
+    'hero.title': 'Ο παλμός πίσω από την Ελληνική Urban Μουσική',    'hero.subtitle': 'Μια συλλογική ομάδα καλλιτεχνών, παραγωγών, δημοσιογράφων και οραματιστών που καθορίζει το μέλλον της ελληνικής urban κουλτούρας.',
+    //Footer section    
+    'footer.p1': 'Ο πρώτος σας προορισμός για να ανακαλύψετε τον ζωντανό κόσμο της ελληνικής urban μουσικής. Παρουσιάζουμε τους καλύτερους καλλιτέχνες, κομμάτια και ανερχόμενα ταλέντα της ελληνικής μουσικής σκηνής.',    
+    'footer.about': 'Το Urban Greece είναι η κορυφαία πλατφόρμα αφιερωμένη στην ανάδειξη του ζωντανού κόσμου της ελληνικής urban μουσικής. Από το 2021, συνδέουμε καλλιτέχνες, θαυμαστές και επαγγελματίες της βιομηχανίας μέσω της δέσμευσής μας στην αυθεντικότητα και την καινοτομία.',    
+    'footer.copyright': '© {0} Urban Greece. Όλα τα δικαιώματα διατηρούνται. Γιορτάζουμε και αναδεικνύουμε την ελληνική urban μουσική κουλτούρα.',    
+    'footer.address': 'Αθήνα, Ελλάδα',    
+    'footer.email': 'contact@urbangreece.com',    
+    'footer.stay_updated': 'Μείνετε Ενημερωμένοι',    
+    'footer.subscribe_text': 'Εγγραφείτε στο newsletter μας για τις τελευταίες ενημερώσεις στην ελληνική urban μουσική.',    
+    'footer.email_placeholder': 'Εισάγετε το email σας',    
+    'footer.subscribing': 'Εγγραφή...',    
+    'footer.subscribed': 'Εγγραφήκατε!',    
+    'footer.try_again': 'Προσπαθήστε Ξανά',    
+    'footer.complete_verification': 'Ολοκληρώστε την Επαλήθευση',    
+    'footer.subscribe': 'Εγγραφή',    
+    'footer.thanks': 'Ευχαριστούμε για την εγγραφή σας!',    
+    'footer.follow_us': 'Ακολουθήστε μας',    
+    'footer.powered_by': 'Με την υποστήριξη',    
+    'navigation': 'Πλοήγηση',    
+    'resources': 'Πόροι',    
+    'nav.home': 'Αρχική',    
+    'nav.discover': 'Ανακάλυψη',    
+    'nav.hot_artists': 'Δημοφιλείς Καλλιτέχνες',    
+    'nav.songs': 'Τραγούδια',    
+    'about.us': 'Σχετικά με Εμάς',    
+    'privacy.title': 'Πολιτική Απορρήτου',    
+    'terms.title': 'Όροι Χρήσης',    
+    'contact.us': 'Επικοινωνία',        
+    
+    // Discover page    
+    'discover.title': 'Ανακαλύψτε την Ελληνική Urban Μουσική',    
+    'discover.subtitle': 'Εξερευνήστε τα τελευταία κομμάτια, τους καλλιτέχνες σε άνοδο και τις επιδραστικές κυκλοφορίες που διαμορφώνουν την ελληνική urban κουλτούρα',    
+    'discover.filter.emerging': 'Νέα Ταλέντα',    
+    'discover.filter.rising': 'Ανερχόμενα Αστέρια',    
+    'discover.filter.all': 'Όλοι οι Καλλιτέχνες',    
+    'discover.filter.listeners': 'Μηνιαίοι Ακροατές',    
+    'discover.loading': 'Φόρτωση καλλιτεχνών...',    
+    'discover.error': 'Σφάλμα φόρτωσης καλλιτεχνών',    
+    'discover.retry': 'Προσπαθήστε ξανά',    
+    'discover.noResults': 'Δεν βρέθηκαν αποτελέσματα',    
+    'discover.showAll': 'Προβολή Όλων των Καλλιτεχνών',    
+    'discover.stats': 'Εμφάνιση {0} από {1} καλλιτέχνες',    
+    'discover.stats.with': 'με',    
+    'discover.stats.to': 'έως',    
+    'discover.sort.label': 'Ταξινόμηση',    
+    'discover.sort.emerging': 'Αναδυόμενοι Πρώτα',    
+    'discover.sort.popular': 'Δημοφιλείς Πρώτα',    
+    'discover.emerging.title': 'Προβολή Αναδυόμενων Ταλέντων',    
+    'discover.emerging.description': 'Ανακαλύψτε το επόμενο κύμα των Ελλήνων urban καλλιτεχνών σε άνοδο. Αυτά τα αναδυόμενα ταλέντα αντιπροσωπεύουν το μέλλον της σκηνής.',    
+    'discover.rising.title': 'Ανερχόμενα Αστέρια',    
+    'discover.rising.description': 'Αυτοί οι καλλιτέχνες δημιουργούν κύματα και χτίζουν σημαντικό κοινό. Βρίσκονται σε θέση να μπουν στο mainstream σύντομα.',    
+    'discover.all.title': 'Όλοι οι Έλληνες Urban Καλλιτέχνες',    
+    'discover.all.description': 'Περιηγηθείτε στην πλήρη συλλογή των Ελλήνων urban καλλιτεχνών, από underground ταλέντα μέχρι mainstream αστέρια.',    
+    'discover.seo.title': 'Ανερχόμενοι Καλλιτέχνες 2023 | Newcomers Greece | Ανερχόμενοι Ράπερς',    
+    'discover.seo.description': 'Ανακαλύψτε τους {0} κορυφαίους ανερχόμενους καλλιτέχνες της ελληνικής urban σκηνής. Νέα ταλέντα στην trap και hip hop, με στατιστικά ακροατών και κατάταξη. Η πιο ενημερωμένη λίστα με νέους Έλληνες καλλιτέχνες.',    
+    'discover.seo.section': 'Ανερχόμενοι Καλλιτέχνες',        
+    
+    // Top Artists page    
+    'top.title': 'Δημοφιλείς Καλλιτέχνες',    
+    'top.error': 'Αποτυχία φόρτωσης δημοφιλών καλλιτεχνών. Παρακαλώ δοκιμάστε ξανά αργότερα.',    
+    'top.show': 'Προβολή',    
+    'top.limit.10': 'Top 10',    
+    'top.limit.20': 'Top 20',    
+    'top.limit.50': 'Top 50',    
+    'top.limit.100': 'Top 100',    
+    'top.loading': 'Φόρτωση δημοφιλών καλλιτεχνών...',    
+    'top.tryAgain': 'Δοκιμάστε ξανά',    
+    'top.noArtists': 'Δεν βρέθηκαν καλλιτέχνες στη βάση δεδομένων.',    
+    'top.section': 'Δημοφιλείς Καλλιτέχνες',    
+    'top.category': 'Μουσικοί Καλλιτέχνες',        
+    
+    // Labels page    
+    'labels.title': 'Labels',    
+    'labels.subtitle': 'Οι εταιρείες που διαμορφώνουν το ελληνικό urban μουσικό τοπίο και ο αντίκτυπός τους στη βιομηχανία.',    
+    'labels.loading': 'Φόρτωση δεδομένων δισκογραφικών...',    
+    'labels.tryAgain': 'Δοκιμάστε ξανά',    
+    'labels.section': 'Δισκογραφικές Εταιρείες',    
+    'labels.category': 'Μουσική Βιομηχανία',    
+    'labels.selectLabel': 'Επιλέξτε μια δισκογραφική για προβολή λεπτομερειών',        
+    'labels.list.title': 'Δισκογραφικές',    
+    'labels.list.marketShare': 'Μερίδιο Αγοράς',        
+    'labels.independent.title': 'Independent',    
+    'labels.independent.tag': 'Ανεξάρτητες κυκλοφορίες',    
+    'labels.independent.description': 'Κυκλοφορίες από καλλιτέχνες χωρίς παραδοσιακή δισκογραφική εταιρεία',   
+    'labels.independent.info': 'Σε αυτή την κατηγορία περιλαμβάνονται κυκλοφορίες όπου οι καλλιτέχνες χρησιμοποιούν το όνομά τους (ή παραλλαγές του) ως δισκογραφική εταιρεία. Αυτό είναι σύνηθες φαινόμενο στον χώρο της trap και του hip-hop, όπου οι καλλιτέχνες συχνά δημοσιεύουν τη μουσική τους ανεξάρτητα.',    
+    'labels.independent.banner': 'Στην κατηγορία "Independent" περιλαμβάνονται κυκλοφορίες όπου ο καλλιτέχνης χρησιμοποιεί το όνομά του ως δισκογραφική.',        
+    'labels.details.overview': 'Επισκόπηση',    
+    'labels.details.releases': 'Κυκλοφορίες',    
+    'labels.details.allReleases': 'Όλες οι Κυκλοφορίες',        
+    'labels.stats.albums': 'Άλμπουμ',    
+    'labels.stats.artists': 'Καλλιτέχνες',    
+    'labels.stats.tracks': 'Κομμάτια',    
+    'labels.stats.track': 'κομμάτι',    
+    'labels.stats.activeYears': 'Ενεργά Έτη',    
+    'labels.stats.marketShare': 'μερίδιο αγοράς',    
+    'labels.stats.ofActiveArtists': 'των ενεργών καλλιτεχνών',    
+    'labels.stats.averageTracks': 'μ.ό. {0}/άλμπουμ',    
+    'labels.stats.releaseTimeline': 'Χρονολόγιο Κυκλοφοριών',    
+    'labels.stats.chartComingSoon': 'Η οπτικοποίηση του χρονολογίου κυκλοφοριών έρχεται σύντομα',    
+    'labels.stats.latestReleases': 'Πρόσφατες Κυκλοφορίες',    
+    'labels.stats.noReleasesFound': 'Δεν βρέθηκαν κυκλοφορίες για αυτή τη δισκογραφική',        
+    'labels.actions.listenSpotify': 'Ακρόαση στο Spotify',
     
     // About section
     'about.ourStory.title': 'Η Ιστορία μας',
-    'about.ourStory.p1': 'Το Urban Greece γεννήθηκε από ένα κοινό όραμα: να αναδείξει την ελληνική urban μουσική στη θέση που της αξίζει, στο κέντρο της πολιτιστικής συζήτησης. Δεν είμαστε απλοί παρατηρητές – είμαστε ενεργοί συμμετέχοντες στην εξέλιξη και την ανάπτυξη της σκηνής.',
-    'about.ourStory.p2': 'Ιδρύθηκε το 2021, η ομάδα μας φέρνει μαζί τα πιο λαμπρά μυαλά και πιο καινοτόμους δημιουργούς στο ελληνικό μουσικό τοπίο. Από την έδρα μας στην Αθήνα, έχουμε χτίσει ένα κίνημα που ξεπερνά τα παραδοσιακά όρια της βιομηχανίας, διαρκώς διευρύνοντας τα όρια του τι μπορεί να είναι η ελληνική urban μουσική.',
+    'about.ourStory.p1': 'Το Urban Greece γεννήθηκε από ένα κοινό όραμα: να αναδείξει την ελληνική urban μουσική σε πρωτοφανή ύψη. Σε ένα τοπίο που κυριαρχείται από παραδοσιακά pop και λαϊκά είδη, αμφισβητούμε το status quo και υποστηρίζουμε ένα κίνημα που αντιπροσωπεύει την αυθεντική φωνή της σύγχρονης Ελλάδας.',
+    'about.ourStory.p2': 'Μέσω στρατηγικών συνεργασιών, καινοτόμου μάρκετινγκ και βαθιάς δέσμευσης στην καλλιτεχνική ακεραιότητα, δημιουργούμε ένα νέο παράδειγμα όπου η ελληνική urban μουσική δεν ανταγωνίζεται απλώς άλλα είδη - επαναπροσδιορίζει ολόκληρο το πεδίο. Το όραμά μας είναι σαφές: να καθιερώσουμε την ελληνική urban μουσική ως παγκόσμια πολιτιστική δύναμη.',
     
     // Who We Are
     'about.whoWeAre.title': 'Ποιοι Είμαστε',
@@ -311,6 +520,7 @@ type LanguageContextType = {
   language: string;
   setLanguage: (lang: string) => void;
   t: (key: string, defaultValue?: string, ...args: any[]) => string;
+  refreshLanguage: () => void;
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -322,10 +532,15 @@ type LanguageProviderProps = {
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   // Try to get stored language or default to English
-  const [language, setLanguage] = useState<string>(() => {
+  const [language, setLanguageState] = useState<string>(() => {
     if (typeof window !== 'undefined') {
-      const savedLanguage = localStorage.getItem('language');
-      return savedLanguage || 'en';
+      try {
+        const savedLanguage = localStorage.getItem('language');
+        return savedLanguage || 'en';
+      } catch (error) {
+        console.error('Error reading language from localStorage:', error);
+        return 'en';
+      }
     }
     return 'en';
   });
@@ -333,44 +548,91 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   // Update localStorage when language changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('language', language);
-      
-      // Update HTML lang attribute for SEO
-      document.documentElement.lang = language;
+      try {
+        localStorage.setItem('language', language);
+        
+        // Update HTML lang attribute for SEO
+        document.documentElement.lang = language;
+        
+        // Dispatch a custom event for components that need to listen for language changes
+        const event = new CustomEvent('languageChanged', { 
+          detail: { language } 
+        });
+        document.dispatchEvent(event);
+      } catch (error) {
+        console.error('Error saving language to localStorage:', error);
+      }
     }
+  }, [language]);
+  
+  // Set language without causing unnecessary fetches
+  const setLanguage = useCallback((newLanguage: string) => {
+    if (newLanguage !== language) {
+      console.log(`Changing language from ${language} to ${newLanguage}`);
+      setLanguageState(newLanguage);
+    }
+  }, [language]);
+  
+  // Method to manually trigger a language refresh
+  const refreshLanguage = useCallback(() => {
+    console.log('Manual language refresh triggered');
+    // This will force components using the useLanguageEffect hook to re-render
+    const event = new CustomEvent('languageChanged', { 
+      detail: { language, forceRefresh: true } 
+    });
+    document.dispatchEvent(event);
   }, [language]);
 
   // Translate function
-  const t = (key: string, defaultValue?: string, ...args: any[]): string => {
+  const t = useCallback((key: string, defaultValue?: string, ...args: any[]): string => {
     // If translations exist for this language and key
     if (translations[language] && translations[language][key]) {
-      return translations[language][key];
+      let text = translations[language][key];
+      
+      // Handle parameter replacements like {0}, {1}, etc.
+      if (args.length > 0) {
+        args.forEach((arg, index) => {
+          text = text.replace(`{${index}}`, arg);
+        });
+      }
+      return text;
     }
     
     // Fallback to English if key exists there
     if (language !== 'en' && translations['en'] && translations['en'][key]) {
-      return translations['en'][key];
+      let text = translations['en'][key];
+      
+      // Handle parameter replacements like {0}, {1}, etc.
+      if (args.length > 0) {
+        args.forEach((arg, index) => {
+          text = text.replace(`{${index}}`, arg);
+        });
+      }
+      return text;
     }
     
     // If a default value is provided, use that
     if (defaultValue !== undefined) {
       // Check if the default value contains a placeholder pattern like {0}
-      if (typeof defaultValue === 'string' && defaultValue.includes('{0}')) {
-        if (args.length > 0) {
-          return defaultValue.replace('{0}', args[0]);
-        }
+      if (typeof defaultValue === 'string' && args.length > 0) {
+        let text = defaultValue;
+        args.forEach((arg, index) => {
+          text = text.replace(`{${index}}`, arg);
+        });
+        return text;
       }
       return defaultValue;
     }
     
     // Last resort: return the key itself
     return key;
-  };
+  }, [language]);
 
   const value = {
     language,
     setLanguage,
-    t
+    t,
+    refreshLanguage
   };
 
   return (

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface LanguageToggleProps {
@@ -6,11 +6,22 @@ interface LanguageToggleProps {
 }
 
 const LanguageToggle: React.FC<LanguageToggleProps> = ({ className = '' }) => {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage, refreshLanguage, t } = useLanguage();
 
-  const toggleLanguage = () => {
-    setLanguage(language === 'en' ? 'el' : 'en');
-  };
+  const toggleLanguage = useCallback(() => {
+    // Set the new language
+    const newLanguage = language === 'en' ? 'el' : 'en';
+    console.log(`LanguageToggle: changing language from ${language} to ${newLanguage}`);
+    
+    // Update the language in the context
+    setLanguage(newLanguage);
+    
+    // Manually trigger a refresh to ensure components update
+    setTimeout(() => {
+      console.log('LanguageToggle: triggering manual refresh');
+      refreshLanguage();
+    }, 50);
+  }, [language, setLanguage, refreshLanguage]);
 
   // Get the opposite language's name for aria-label
   const oppositeLanguage = language === 'en' ? 'Greek' : 'English';

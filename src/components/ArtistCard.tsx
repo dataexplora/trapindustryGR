@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArtistWithImages } from '../services/artistService';
 import { Check, Music, User, Users, Headphones } from 'lucide-react';
 import { formatNumber } from '../utils/format';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface ArtistCardProps {
   artist: ArtistWithImages;
@@ -10,8 +11,9 @@ interface ArtistCardProps {
   showRank?: boolean;
 }
 
-const ArtistCard = ({ artist, rank, showRank = true }: ArtistCardProps) => {
+const ArtistCard: React.FC<ArtistCardProps> = ({ artist, rank, showRank = true }) => {
   const [imageError, setImageError] = useState(false);
+  const { language } = useLanguage();
   
   // Default avatar placeholder
   const placeholderImage = 'https://placehold.co/400x400/252536/8A8AFF?text=Artist';
@@ -20,6 +22,19 @@ const ArtistCard = ({ artist, rank, showRank = true }: ArtistCardProps) => {
   const avatarImage = imageError || !artist.images?.avatar 
     ? placeholderImage 
     : artist.images.avatar;
+  
+  // Debugging for rank display
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`ArtistCard rank debug:`, {
+        artistName: artist.name,
+        rank,
+        showRank,
+        shouldShowRank: Boolean(showRank && rank),
+        currentLanguage: language
+      });
+    }
+  }, [artist.name, rank, showRank, language]);
   
   // Log the artist data (in development only)
   if (process.env.NODE_ENV === 'development') {
@@ -39,7 +54,7 @@ const ArtistCard = ({ artist, rank, showRank = true }: ArtistCardProps) => {
       <div className="bg-dark-card rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 border border-dark-border">
         <div className="relative">
           {showRank && rank && (
-            <div className="absolute top-2 left-2 bg-gradient-to-r from-indigo-800 to-purple-700 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold z-10">
+            <div className="absolute top-2 left-2 bg-gradient-to-r from-indigo-800 to-purple-700 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold z-20">
               {rank}
             </div>
           )}
