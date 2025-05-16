@@ -5,10 +5,12 @@ import Layout from '../components/Layout';
 import SpotifyPlayer from '../components/SpotifyPlayer';
 import ImageGallery from '../components/ImageGallery';
 import SEO from '../components/SEO';
+import ArtistReactionButtons from '../components/ArtistReactionButtons';
+import CompactArtistReactions from '../components/CompactArtistReactions';
 import { 
   Check, Music, User, Users, ExternalLink, Calendar, Heart, 
   Instagram, Twitter, Youtube, Facebook, Globe, Link2, Headphones,
-  Play, Clock, ChevronDown, ChevronUp, MapPin, Image, Star
+  Play, Clock, ChevronDown, ChevronUp, MapPin, Image, Star, Flame
 } from 'lucide-react';
 import { formatNumber, formatDuration } from '../utils/format';
 
@@ -361,7 +363,9 @@ const ArtistDetailPage = () => {
                           {formatNumber(totalStreams)}
                         </div>
                       </div>
-                      {artist.world_rank ? (
+                      
+                      {/* Show world rank if available */}
+                      {artist.world_rank && (
                         <div className="bg-dark-muted p-4 rounded-lg border border-dark-border">
                           <div className="flex items-center justify-center md:justify-start text-sm text-gray-400">
                             <Star className="w-4 h-4 mr-1 text-yellow-400" />
@@ -371,23 +375,13 @@ const ArtistDetailPage = () => {
                             #{formatNumber(artist.world_rank)}
                           </div>
                         </div>
-                      ) : null}
+                      )}
                     </div>
 
-                    {/* Spotify Link */}
-                    {artist.share_url && (
-                      <div className="mt-6">
-                        <a 
-                          href={artist.share_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md"
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          View on Spotify
-                        </a>
-                      </div>
-                    )}
+                    {/* Artist Reactions - placed directly under the stats grid without a box */}
+                    <div className="mt-4 flex justify-center md:justify-start">
+                      <CompactArtistReactions artistId={artist.id} />
+                    </div>
                   </div>
                 </div>
               </div>

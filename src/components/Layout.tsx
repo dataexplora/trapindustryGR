@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { TrendingUp, Instagram, Twitter, Youtube, Menu, X } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import LanguageToggle from './LanguageToggle';
+import { useLanguage } from '../contexts/LanguageContext';
 
 declare global {
   interface Window {
@@ -17,6 +19,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const recaptchaRef = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Load reCAPTCHA script
@@ -147,7 +150,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
             {/* Desktop Navigation */}
             <nav className="hidden mr-6 lg:block">
-              <ul className="flex space-x-6">
+              <ul className="flex items-center space-x-6">
                 <li>
                   <Link to="/" className={`hover:text-white/80 transition-colors ${location.pathname === '/' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
                     Home
@@ -168,6 +171,9 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                   <Link to="/songs" className={`hover:text-white/80 transition-colors ${location.pathname === '/songs' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
                     Songs
                   </Link>
+                </li>
+                <li className="ml-2">
+                  <LanguageToggle />
                 </li>
               </ul>
             </nav>
@@ -215,6 +221,11 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                       Songs
                     </Link>
                   </li>
+                  <li className="mt-4">
+                    <div className="flex justify-center">
+                      <LanguageToggle />
+                    </div>
+                  </li>
                 </ul>
               </div>
             </nav>
@@ -240,7 +251,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 <h3 className="text-xl font-bold">Urban Greece</h3>
               </div>
               <p className="text-gray-400 text-sm mb-4">
-                Your premier destination for discovering the vibrant world of Greek urban music. We showcase the best artists, tracks, and emerging talents in the Greek music scene.
+                {t('footer.p1', 'Your premier destination for discovering the vibrant world of Greek urban music. We showcase the best artists, tracks, and emerging talents in the Greek music scene.')}
               </p>
               <div className="text-gray-400 text-sm">
                 <p>Athens, Greece</p>
@@ -331,7 +342,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           <div className="border-t border-gray-800 mt-8 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center text-center md:text-left">
               <div className="text-gray-400 text-sm">
-                <p>© 2025 Urban Greece. All rights reserved.</p>
+                <p>{t('footer.copyright', '© {0} Urban Greece. All rights reserved. Celebrating and elevating Greek urban music culture.', new Date().getFullYear())}</p>
               </div>
               <div className="flex items-center space-x-4 mt-4 md:mt-0">
                 <p className="text-gray-500 text-xs">Powered by</p>

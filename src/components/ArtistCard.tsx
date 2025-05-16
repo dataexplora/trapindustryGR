@@ -68,11 +68,9 @@ const ArtistCard = ({ artist, rank, showRank = true }: ArtistCardProps) => {
         </div>
         <div className="p-4">
           <h3 className="text-white font-semibold text-lg mb-1 truncate">{artist.name}</h3>
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <Users className="h-3 w-3 text-gray-400 mr-1" />
-              <span className="text-gray-400 text-xs">{formatNumber(artist.followers || 0)} followers</span>
-            </div>
+          <div className="flex items-center">
+            <Users className="h-3 w-3 text-gray-400 mr-1" />
+            <span className="text-gray-400 text-xs">{formatNumber(artist.followers || 0)} followers</span>
           </div>
         </div>
       </div>

@@ -112,19 +112,19 @@ const HomePage = () => {
   useEffect(() => {
     // Set the title - most important for SEO
     document.title = "Urban Greece | Ό,τι συμβαίνει στo Ελληνικό Trap Industry";
-    
+    const description = 'Urban Greece: Η #1 σελίδα για την Ελληνική trap & hip-hop μουσική, κουλτούρα και lifestyle. Ανακάλυψε καλλιτέχνες...'
     // Set critical meta tags for homepage
     const metaTags = [
-      { name: 'description', content: 'Urban Greece: Ελληνική trap & hip-hop μουσική, κουλτούρα και lifestyle. Ανακάλυψε καλλιτέχνες, stories, events & αποκλειστικό περιεχόμενο.' },
+      { name: 'description', content: description },
       { name: 'keywords', content: enhancedKeywords },
       { property: 'og:title', content: 'Urban Greece | Ό,τι συμβαίνει στo Ελληνικό Trap Industry' },
-      { property: 'og:description', content: 'Urban Greece: Ελληνική trap & hip-hop μουσική, κουλτούρα και lifestyle. Ανακάλυψε καλλιτέχνες, stories, events & αποκλειστικό περιεχόμενο.' },
+      { property: 'og:description', content: description },
       { property: 'og:type', content: 'website' },
       { property: 'og:url', content: 'https://urbangreece.com' },
       { property: 'og:image', content: 'https://urbangreece.com/assets/images/icon.webp' },
       { name: 'twitter:card', content: 'summary_large_image' },
       { name: 'twitter:title', content: 'Urban Greece | Ό,τι συμβαίνει στo Ελληνικό Trap Industry' },
-      { name: 'twitter:description', content: 'Urban Greece: Ελληνική trap & hip-hop μουσική, κουλτούρα και lifestyle. Ανακάλυψε καλλιτέχνες, stories, events & αποκλειστικό περιεχόμενο.' },
+      { name: 'twitter:description', content: description },
       { name: 'twitter:image', content: 'https://urbangreece.com/assets/images/icon.webp' }
     ];
     
@@ -225,8 +225,7 @@ const HomePage = () => {
                 <AlertTriangle className="h-6 w-6 text-amber-400 mr-3 flex-shrink-0" />
                 <div className="text-amber-300 text-sm flex-grow">
                   <p>
-                    <strong>Note:</strong> Unable to retrieve live data from the database. 
-                    Displaying fallback data for preview purposes.
+                    <strong>Note:</strong> Unable to retrieve live data from the database.
                   </p>
                 </div>
                 <Button 
