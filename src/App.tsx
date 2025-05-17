@@ -18,6 +18,8 @@ import AboutUs from "./pages/AboutUs";
 import TermsOfService from "./pages/TermsOfService";
 import ContactUs from "./pages/ContactUs";
 import NotFound from "./pages/NotFound";
+import EventsPage from './pages/EventsPage';
+import EventDetailPage from './pages/EventDetailPage';
 
 const queryClient = new QueryClient();
 
@@ -42,6 +44,8 @@ const App = () => (
                 <Route path="/about" element={<AboutUs />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/contact" element={<ContactUs />} />
+                <Route path="/events" element={<EventsPage />} />
+                <Route path="/events/:id" element={<EventDetailPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

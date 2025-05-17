@@ -127,6 +127,15 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Add Events to the links array
+  const links = [
+    { path: '/', text: 'Home' },
+    { path: '/artists', text: 'Artists' },
+    { path: '/songs', text: 'Songs' },
+    { path: '/events', text: 'Events' },
+    { path: '/discover', text: 'Discover' }
+  ];
+
   return (
     <div className="flex flex-col min-h-screen" key={`layout-${language}`}>
       <header className="bg-gradient-to-r from-indigo-900 to-purple-900 text-white py-7 shadow-lg fixed top-0 w-full z-40">
@@ -164,6 +173,11 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 <li>
                   <Link to="/discover" className={`hover:text-white/80 transition-colors ${location.pathname === '/discover' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
                     Discover
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/events" className={`hover:text-white/80 transition-colors ${location.pathname === '/events' ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'}`}>
+                    Events
                   </Link>
                 </li>
                 <li>

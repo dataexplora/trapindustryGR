@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import ArtistCard from '../components/ArtistCard';
 import TrackRow from '../components/TrackRow';
+import FeaturedEvents from '../components/FeaturedEvents';
 import SpotifyPlayer from '../components/SpotifyPlayer';
 import { Button } from '@/components/ui/button';
 import { Music, AlertTriangle, User, Loader2 } from 'lucide-react';
@@ -270,6 +271,8 @@ const HomePage = () => {
                 )}
               </div>
             </div>
+
+            <FeaturedEvents />
 
             <div>
               <div className="flex justify-between items-center mb-6">
