@@ -3,20 +3,25 @@ import Layout from '../components/Layout';
 import EventCard from '../components/EventCard';
 import { useLanguage } from '../contexts/LanguageContext';
 import { EventListItem, eventService } from '@/services/eventService';
-import { Calendar, Filter, MapPin, Search, Tag, X, SlidersHorizontal, Clock, CalendarDays } from 'lucide-react';
+import { Calendar, MapPin, Search, Tag, X, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, addDays, isSameDay, addMonths } from 'date-fns';
+import { format } from 'date-fns';
 import SEO from '../components/SEO';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "../components/ui/carousel";
 
 // Event filter types
 type FilterState = {
   query: string;
   eventType: string;
   city: string;
-  timeframe: 'upcoming' | 'weekend' | 'month' | 'all';
 };
 
 const EVENT_TYPES = [
@@ -48,7 +53,6 @@ const EventsPage: React.FC = () => {
     query: '',
     eventType: '',
     city: '',
-    timeframe: 'upcoming',
   });
   const { t } = useLanguage();
   
@@ -61,13 +65,20 @@ const EventsPage: React.FC = () => {
         setIsLoading(true);
         
         // Load featured events for the hero section
-        const featured = await eventService.getFeaturedEvents(3);
+        const featured = await eventService.getFeaturedEvents(6);
+        console.log("Featured events:", featured);
         setFeaturedEvents(featured);
         
-        // Load all upcoming events
-        const events = await eventService.getUpcomingEvents(50);
-        setAllEvents(events);
+        // Load all upcoming events - increased to get more events
+        const events = await eventService.getUpcomingEvents(100);
+        console.log("All events:", events);
         
+        // Sort events chronologically by start date
+        const sortedEvents = [...events].sort((a, b) => 
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+        );
+        
+        setAllEvents(sortedEvents);
         setError(null);
       } catch (err) {
         console.error('Error loading events:', err);
@@ -97,37 +108,9 @@ const EventsPage: React.FC = () => {
       query: '',
       eventType: '',
       city: '',
-      timeframe: 'upcoming',
     });
     setSearchInput('');
   };
-  
-  // Create date range based on timeframe
-  const dateRange = useMemo(() => {
-    const now = new Date();
-    const startDate = now.toISOString();
-    let endDate;
-    
-    switch (filters.timeframe) {
-      case 'weekend':
-        // Find next Friday-Sunday
-        const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
-        const daysUntilFriday = dayOfWeek <= 5 ? 5 - dayOfWeek : 5 + 7 - dayOfWeek;
-        const friday = addDays(now, daysUntilFriday);
-        endDate = addDays(friday, 2).toISOString(); // Sunday
-        break;
-      case 'month':
-        endDate = addMonths(now, 1).toISOString();
-        break;
-      case 'all':
-        endDate = addMonths(now, 12).toISOString(); // 1 year out
-        break;
-      default: // upcoming
-        endDate = addMonths(now, 3).toISOString(); // 3 months out
-    }
-    
-    return { startDate, endDate };
-  }, [filters.timeframe]);
   
   // Filter events based on criteria
   const filteredEvents = useMemo(() => {
@@ -149,30 +132,9 @@ const EventsPage: React.FC = () => {
         return false;
       }
       
-      // Filter by date range
-      const eventDate = new Date(event.startDate);
-      const startDate = new Date(dateRange.startDate);
-      const endDate = new Date(dateRange.endDate);
-      
-      return eventDate >= startDate && eventDate <= endDate;
+      return true;
     });
-  }, [allEvents, filters, dateRange]);
-  
-  // Format the date range for display
-  const formattedDateRange = useMemo(() => {
-    const start = new Date(dateRange.startDate);
-    const end = new Date(dateRange.endDate);
-    
-    if (filters.timeframe === 'weekend') {
-      return 'Next Weekend';
-    } else if (filters.timeframe === 'upcoming') {
-      return 'Next 3 Months';
-    } else if (filters.timeframe === 'month') {
-      return 'This Month';
-    } else {
-      return 'All Upcoming';
-    }
-  }, [dateRange, filters.timeframe]);
+  }, [allEvents, filters]);
   
   // Active filters count
   const activeFiltersCount = useMemo(() => {
@@ -180,7 +142,6 @@ const EventsPage: React.FC = () => {
     if (filters.query) count++;
     if (filters.eventType) count++;
     if (filters.city) count++;
-    if (filters.timeframe !== 'upcoming') count++;
     return count;
   }, [filters]);
   
@@ -233,10 +194,10 @@ const EventsPage: React.FC = () => {
             </div>
             
             {/* Featured Events Carousel */}
-            <div className="flex flex-col md:flex-row gap-6 mt-10">
-              {isLoading ? (
-                // Skeletons for loading state
-                Array.from({ length: 3 }).map((_, i) => (
+            {isLoading ? (
+              // Skeletons for loading state
+              <div className="flex flex-col md:flex-row gap-6 mt-10">
+                {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="w-full md:w-1/3">
                     <Skeleton className="aspect-[16/9] rounded-xl" />
                     <div className="mt-3">
@@ -244,24 +205,37 @@ const EventsPage: React.FC = () => {
                       <Skeleton className="h-4 w-1/2" />
                     </div>
                   </div>
-                ))
-              ) : featuredEvents.length > 0 ? (
-                // Featured events
-                featuredEvents.map(event => (
-                  <div key={event.id} className="w-full md:w-1/3">
-                    <EventCard 
-                      event={event} 
-                      variant="featured" 
-                    />
+                ))}
+              </div>
+            ) : featuredEvents.length > 0 ? (
+              // Featured events carousel
+              <div className="mt-10 px-4 md:px-10">
+                <Carousel
+                  opts={{
+                    align: "start",
+                    loop: true,
+                  }}
+                  className="w-full"
+                >
+                  <CarouselContent>
+                    {featuredEvents.map(event => (
+                      <CarouselItem key={event.id} className="basis-full md:basis-1/2 lg:basis-1/3">
+                        <EventCard event={event} variant="featured" />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <div className="flex justify-center gap-2 mt-4">
+                    <CarouselPrevious className="relative static left-0 translate-y-0 bg-slate-800 hover:bg-slate-700" />
+                    <CarouselNext className="relative static right-0 translate-y-0 bg-slate-800 hover:bg-slate-700" />
                   </div>
-                ))
-              ) : (
-                // No featured events
-                <div className="w-full text-center py-8">
-                  <p className="text-slate-400">{t('events.featured.none', 'No featured events available')}</p>
-                </div>
-              )}
-            </div>
+                </Carousel>
+              </div>
+            ) : (
+              // No featured events
+              <div className="w-full text-center py-8">
+                <p className="text-slate-400">{t('events.featured.none', 'No featured events available')}</p>
+              </div>
+            )}
           </div>
         </div>
         
@@ -287,36 +261,10 @@ const EventsPage: React.FC = () => {
               </Button>
             </div>
             
-            {/* Timeframe tabs - always visible */}
-            <Tabs 
-              defaultValue="upcoming" 
-              value={filters.timeframe}
-              onValueChange={(v) => handleFilterChange('timeframe', v)}
-              className="mb-6"
-            >
-              <TabsList className="grid grid-cols-4 bg-slate-900 border border-slate-800">
-                <TabsTrigger value="upcoming" className="data-[state=active]:bg-indigo-900">
-                  <Clock className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">{t('events.timeframe.upcoming', 'Upcoming')}</span>
-                </TabsTrigger>
-                <TabsTrigger value="weekend" className="data-[state=active]:bg-indigo-900">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">{t('events.timeframe.weekend', 'Weekend')}</span>
-                </TabsTrigger>
-                <TabsTrigger value="month" className="data-[state=active]:bg-indigo-900">
-                  <CalendarDays className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">{t('events.timeframe.month', 'This Month')}</span>
-                </TabsTrigger>
-                <TabsTrigger value="all" className="data-[state=active]:bg-indigo-900">
-                  <span className="hidden sm:inline">{t('events.timeframe.all', 'All Upcoming')}</span>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            
             {/* Advanced Filters */}
             {showFilters && (
               <div className="mb-6 p-4 bg-slate-900 border border-slate-800 rounded-lg">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Event Type Filter */}
                   <div>
                     <label className="block text-sm font-medium text-slate-400 mb-2">
@@ -353,11 +301,8 @@ const EventsPage: React.FC = () => {
                     </select>
                   </div>
                   
-                  {/* Timeframe info */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-400 mb-2">
-                      {t('events.filters.activeFilters', 'Active Filters')}
-                    </label>
+                  {/* Active Filters */}
+                  <div className="md:col-span-2 mt-4">
                     <div className="flex flex-wrap gap-2">
                       {filters.query && (
                         <Badge className="flex items-center gap-1 px-3 py-1 bg-slate-700">
@@ -401,11 +346,6 @@ const EventsPage: React.FC = () => {
                         </Badge>
                       )}
                       
-                      <Badge className="flex items-center gap-1 px-3 py-1 bg-slate-700">
-                        <Calendar className="h-3 w-3" />
-                        {formattedDateRange}
-                      </Badge>
-                      
                       {activeFiltersCount > 0 && (
                         <Button 
                           variant="outline" 
@@ -431,7 +371,7 @@ const EventsPage: React.FC = () => {
             </div>
           </div>
           
-          {/* Event Grid */}
+          {/* Event Carousel */}
           {isLoading ? (
             // Loading skeleton
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
@@ -475,15 +415,33 @@ const EventsPage: React.FC = () => {
               </Button>
             </div>
           ) : (
-            // Event grid
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredEvents.map(event => (
-                <EventCard 
-                  key={event.id} 
-                  event={event} 
-                />
-              ))}
-            </div>
+            // Events Carousel
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full px-4"
+            >
+              <CarouselContent>
+                {filteredEvents.map(event => (
+                  <CarouselItem key={event.id} className="basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 p-1">
+                    <EventCard 
+                      key={event.id}
+                      event={event} 
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <div className="flex justify-center gap-2 mt-6">
+                <CarouselPrevious className="relative static left-0 translate-y-0 bg-slate-800 hover:bg-slate-700">
+                  <ChevronLeft className="h-5 w-5" />
+                </CarouselPrevious>
+                <CarouselNext className="relative static right-0 translate-y-0 bg-slate-800 hover:bg-slate-700">
+                  <ChevronRight className="h-5 w-5" />
+                </CarouselNext>
+              </div>
+            </Carousel>
           )}
         </div>
       </Layout>
