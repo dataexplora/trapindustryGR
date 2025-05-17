@@ -55,7 +55,263 @@ export const trackService = {
     
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`Fetching top ${limit} tracks from database...`);
+        console.log(`Fetching top ${limit} tracks from cache table...`);
+      }
+
+      // First try to get top track IDs from the cache table
+      const { data: topTrackIds, error: cacheError } = await supabase
+        .from('cached_top_tracks')
+        .select('track_id, rank')
+        .order('rank', { ascending: true })
+        .limit(limit);
+        
+      if (!cacheError && topTrackIds && topTrackIds.length > 0) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Retrieved ${topTrackIds.length} track IDs from cache table`);
+        }
+        
+        // Get the track IDs to fetch
+        const trackIds = topTrackIds.map(item => item.track_id);
+        
+        // Get full data for these tracks
+        const { data: tracks, error: tracksError } = await supabase
+          .from('tracks')
+          .select('*')
+          .in('id', trackIds);
+          
+        if (tracksError) {
+          console.error('Error fetching tracks by IDs:', tracksError);
+          throw tracksError;
+        }
+        
+        if (!tracks || tracks.length === 0) {
+          console.warn('No tracks found for the cached IDs');
+          // Fall back to direct query below
+        } else {
+          // Sort tracks according to the order in the cache
+          const rankedTracks = tracks
+            .map(track => {
+              const rankInfo = topTrackIds.find(item => item.track_id === track.id);
+              return { 
+                ...track, 
+                cacheRank: rankInfo ? rankInfo.rank : 999
+              };
+            })
+            .sort((a, b) => a.cacheRank - b.cacheRank);
+            
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`Sorted ${rankedTracks.length} tracks by cached rank`);
+          }
+          
+          // Get track IDs for fetching artist relationships
+          const sortedTrackIds = rankedTracks.map(track => track.id);
+          
+          // Get album IDs for fetching album names and images
+          const albumIds = [...new Set(rankedTracks.filter(t => t.album_id).map(t => t.album_id))];
+          
+          // Get album names
+          let albumsMap: Record<string, string> = {};
+          if (albumIds.length > 0) {
+            try {
+              if (process.env.NODE_ENV === 'development') {
+                console.log('Fetching album names...');
+              }
+              const { data: albumsData, error: albumsError } = await supabase
+                .from('albums')
+                .select('id, name')
+                .in('id', albumIds);
+                
+              if (albumsError) {
+                console.error('Error fetching album names:', albumsError);
+              } else if (albumsData) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.log(`Retrieved ${albumsData.length} album names`);
+                }
+                albumsMap = albumsData.reduce((acc, album) => ({
+                  ...acc,
+                  [album.id]: album.name
+                }), {});
+              }
+            } catch (err) {
+              console.error('Error fetching albums:', err);
+            }
+          }
+          
+          // Get album images
+          let albumImagesMap: Record<string, AlbumImage> = {};
+          if (albumIds.length > 0) {
+            try {
+              if (process.env.NODE_ENV === 'development') {
+                console.log('Fetching album images...');
+              }
+              const { data: albumImagesData, error: albumImagesError } = await supabase
+                .from('album_images')
+                .select('album_id, url, width, height')
+                .in('album_id', albumIds);
+                
+              if (albumImagesError) {
+                console.error('Error fetching album images:', albumImagesError);
+              } else if (albumImagesData && albumImagesData.length > 0) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.log(`Retrieved ${albumImagesData.length} album images`);
+                }
+                // Use the first image for each album
+                albumImagesMap = albumImagesData.reduce((acc, img) => {
+                  if (!acc[img.album_id]) {
+                    acc[img.album_id] = {
+                      url: img.url,
+                      width: img.width,
+                      height: img.height
+                    };
+                  }
+                  return acc;
+                }, {} as Record<string, AlbumImage>);
+                
+                // Log info about album images found
+                if (process.env.NODE_ENV === 'development') {
+                  console.log(`Album images mapped for ${Object.keys(albumImagesMap).length} albums`);
+                }
+              } else if (process.env.NODE_ENV === 'development') {
+                console.log('No album images found in database');
+              }
+            } catch (err) {
+              console.error('Error processing album images:', err);
+            }
+          }
+          
+          // Get artist-track relationships
+          let trackArtistsMap: Record<string, {id: string, name: string, is_primary: boolean}[]> = {};
+          try {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Fetching artist-track relationships...');
+              // Log query for debugging
+              console.log(`Querying artist_tracks table for ${sortedTrackIds.length} track IDs`);
+            }
+            
+            const { data: artistTracksData, error: artistTracksError } = await supabase
+              .from('artist_tracks')
+              .select(`
+                artist_id,
+                track_id,
+                is_primary,
+                artists:artist_id(id, name)
+              `)
+              .in('track_id', sortedTrackIds);
+              
+            if (artistTracksError) {
+              console.error('Error fetching artist_tracks:', artistTracksError);
+            } else if (artistTracksData && artistTracksData.length > 0) {
+              if (process.env.NODE_ENV === 'development') {
+                console.log(`Retrieved ${artistTracksData.length} artist-track relationships`);
+              
+                // Log the first relationship for debugging structure
+                if (artistTracksData.length > 0) {
+                  console.log('Sample artist-track relationship:', JSON.stringify(artistTracksData[0]));
+                }
+              }
+              
+              // Group artists by track - simplified approach
+              artistTracksData.forEach(relation => {
+                const trackId = relation.track_id;
+                
+                if (!trackArtistsMap[trackId]) {
+                  trackArtistsMap[trackId] = [];
+                }
+                
+                // Add a simplified artist entry using the artist_id directly
+                trackArtistsMap[trackId].push({
+                  id: relation.artist_id,
+                  name: 'Artist', // Fallback name
+                  is_primary: !!relation.is_primary
+                });
+              });
+              
+              // After adding all relationships, fetch actual artist names in a single query
+              const artistIds = [...new Set(artistTracksData.map(rel => rel.artist_id))];
+              if (process.env.NODE_ENV === 'development') {
+                console.log(`Fetching details for ${artistIds.length} unique artists`);
+              }
+              
+              const { data: artistsData, error: artistsFetchError } = await supabase
+                .from('artists')
+                .select('id, name')
+                .in('id', artistIds);
+                
+              if (artistsFetchError) {
+                console.error('Error fetching artist details:', artistsFetchError);
+              } else if (artistsData && artistsData.length > 0) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.log(`Retrieved ${artistsData.length} artist details`);
+                }
+                
+                // Create a map of artist id -> name for quick lookups
+                const artistNameMap: Record<string, string> = {};
+                artistsData.forEach(artist => {
+                  artistNameMap[artist.id] = artist.name;
+                });
+                
+                // Update the artist names in our map
+                Object.keys(trackArtistsMap).forEach(trackId => {
+                  trackArtistsMap[trackId] = trackArtistsMap[trackId].map(artist => ({
+                    ...artist,
+                    name: artistNameMap[artist.id] || 'Unknown Artist'
+                  }));
+                });
+              }
+              
+              // Log tracks with no artists found
+              if (process.env.NODE_ENV === 'development') {
+                const tracksWithNoArtists = sortedTrackIds.filter(id => !trackArtistsMap[id] || trackArtistsMap[id].length === 0);
+                if (tracksWithNoArtists.length > 0) {
+                  console.warn(`${tracksWithNoArtists.length} tracks have no artist relationships`);
+                }
+              }
+            }
+          } catch (err) {
+            console.error('Error processing artist-track relationships:', err);
+          }
+          
+          // Process tracks with all the data
+          const tracksWithData = rankedTracks.map(track => {
+            // Get artists for this track
+            const trackArtists = trackArtistsMap[track.id] || [];
+            
+            // Find primary artist, or use first artist, or null
+            const primaryArtist = trackArtists.find(a => a.is_primary) || trackArtists[0] || null;
+            
+            // Get album image with fallback
+            const albumImage = track.album_id && albumImagesMap[track.album_id] ? 
+              albumImagesMap[track.album_id] : 
+              { url: `https://placehold.co/400x400/202530/8A8AFF?text=${encodeURIComponent(track.name || 'Album')}` };
+            
+            // Remove temp cacheRank
+            const { cacheRank, ...trackWithoutRank } = track;
+            
+            return {
+              ...trackWithoutRank,
+              play_count: track.play_count || 0,
+              album_name: track.album_id ? albumsMap[track.album_id] || 'Unknown Album' : null,
+              artist_name: primaryArtist ? primaryArtist.name : track.artist_name || 'Unknown Artist',
+              artist_id: primaryArtist ? primaryArtist.id : track.artist_id,
+              artists: trackArtists.length > 0 
+                ? trackArtists.map(a => ({
+                    id: a.id,
+                    name: a.name,
+                  }))
+                : undefined,
+              album_image: albumImage
+            };
+          });
+          
+          // Cache the results
+          cacheService.set(cacheKey, tracksWithData);
+          return tracksWithData;
+        }
+      }
+      
+      // If the cache table failed or was empty, fall back to the original method
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Cache table failed or empty, falling back to direct query');
       }
       
       // First, get just the tracks data

@@ -25,12 +25,18 @@ interface Song {
 }
 
 const SongsPage = () => {
-  const { allTracks: tracks, isLoading, error, refreshData } = useData();
+  const { allTracks: tracks, isLoading, isLoadingAll, error, refreshData, loadAllData } = useData();
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
   const [songs, setSongs] = useState<Song[]>([]);
   const [totalSongs, setTotalSongs] = useState(0);
   const [uniqueGenres, setUniqueGenres] = useState<string[]>([]);
   const [uniqueArtists, setUniqueArtists] = useState<Set<string>>(new Set());
+
+  // Load all track data when component mounts
+  useEffect(() => {
+    // Load all tracks from DataContext when the component mounts
+    loadAllData();
+  }, [loadAllData]);
 
   useEffect(() => {
     const fetchSongs = async () => {
@@ -167,6 +173,9 @@ const SongsPage = () => {
     setSelectedTrack(trackId);
   };
 
+  // Show combined loading state if either songs or tracks are loading
+  const showLoading = isLoading || isLoadingAll;
+
   return (
     <>
       <SEO
@@ -190,7 +199,7 @@ const SongsPage = () => {
           </div>
 
           <div className="max-w-4xl mx-auto">
-            {isLoading ? (
+            {showLoading ? (
               <div className="flex justify-center items-center h-[32rem]">
                 <div className="flex items-center space-x-2 text-xl text-gray-300">
                   <Loader2 className="h-6 w-6 animate-spin" />

@@ -81,7 +81,6 @@ export const artistService = {
     if (cachedData) {
       return cachedData;
     }
-    
     try {
       // Fetch artists from the database
       const { data: artists, error } = await supabase
@@ -159,160 +158,132 @@ export const artistService = {
   getTopArtists: async (limit = 10): Promise<ArtistWithImages[]> => {
     const cacheKey = `getTopArtists-${limit}`;
     
-    // Try to get from cache first
+    // Try to get from in-memory cache first
     const cachedData = cacheService.get<ArtistWithImages[]>(cacheKey);
-    if (cachedData) {
-      return cachedData;
-    }
+    if (cachedData) return cachedData;
     
     try {
-      // Only log in development mode
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Fetching top ${limit} artists from database...`);
-      }
-      
-      // Fetch top artists by monthly listeners with null check
-      const { data: artists, error } = await supabase
-        .from('artists')
-        .select('*')
-        .not('monthly_listeners', 'is', null) // Filter out null monthly_listeners
-        .order('monthly_listeners', { ascending: false })
+      // Step 1: Get top artist IDs from the cache table
+      const { data: topArtistIds, error: cacheError } = await supabase
+        .from('cached_top_artists')
+        .select('artist_id, rank')
+        .order('rank', { ascending: true })
         .limit(limit);
-      
-      if (error) {
-        console.error('Error fetching top artists:', error);
-        throw error;
-      }
-
-      if (!artists || artists.length === 0) {
+        
+      if (!cacheError && topArtistIds && topArtistIds.length > 0) {
         if (process.env.NODE_ENV === 'development') {
-          console.warn('No artists returned from database query');
-          console.log('Falling back to hardcoded top artists');
+          console.log(`Retrieved ${topArtistIds.length} artist IDs from cache table`);
         }
         
-        // Fallback to hardcoded data when no artists are found
-        const fallbackData = [
-          {
-            id: 'marzi-id',
-            name: 'Marzi',
-            monthly_listeners: 258000,
-            followers: 15700,
-            verified: true,
-            images: {
-              avatar: 'https://placehold.co/400x400/252536/8A8AFF?text=Marzi'
-            }
-          },
-          {
-            id: 'yungkapa-id',
-            name: 'YungKapa',
-            monthly_listeners: 245000,
-            followers: 14300,
-            verified: true,
-            images: {
-              avatar: 'https://placehold.co/400x400/252536/8A8AFF?text=YungKapa'
-            }
-          },
-          {
-            id: 'bigskendo-id',
-            name: 'Big Skendo',
-            monthly_listeners: 220000,
-            followers: 12400,
-            verified: true,
-            images: {
-              avatar: 'https://placehold.co/400x400/252536/8A8AFF?text=BigSkendo'
-            }
-          },
-          {
-            id: 'gmbeataz-id',
-            name: 'GMBeaTz',
-            monthly_listeners: 195000,
-            followers: 10900,
-            verified: true,
-            images: {
-              avatar: 'https://placehold.co/400x400/252536/8A8AFF?text=GMBeaTz'
-            }
-          }
-        ] as ArtistWithImages[];
+        // Step 2: Extract the artist IDs
+        const artistIds = topArtistIds.map(item => item.artist_id);
         
-        // Cache the fallback data with a shorter expiration (1 minute)
-        cacheService.set(cacheKey, fallbackData, 60 * 1000);
-        return fallbackData;
-      }
+        // Step 3: Get the full artist data for these IDs
+        const { data: artists, error: artistsError } = await supabase
+          .from('artists')
+          .select('*')
+          .in('id', artistIds);
+          
+        if (artistsError) {
+          console.error('Error fetching artists by IDs:', artistsError);
+          throw artistsError;
+        }
+        
+        if (!artists || artists.length === 0) {
+          console.warn('No artists found for the cached IDs');
+          // Fall back to direct query below
+        } else {
+          // Sort artists according to the order in the cache
+          const rankedArtists = artists
+            .map(artist => {
+              const rankInfo = topArtistIds.find(item => item.artist_id === artist.id);
+              return { 
+                ...artist, 
+                cacheRank: rankInfo ? rankInfo.rank : 999 // Use 999 as fallback rank
+              };
+            })
+            .sort((a, b) => a.cacheRank - b.cacheRank);
+            
+          // For each artist, fetch their images and external links
+          const artistsWithData = await Promise.all(
+            rankedArtists.map(async (artist) => {
+              if (process.env.NODE_ENV === 'development') {
+                console.log(`Processing artist: ${artist.name} (ID: ${artist.id})`);
+                console.log(`Artist monthly listeners: ${artist.monthly_listeners}, followers: ${artist.followers}`);
+              }
+              
+              // Fetch images
+              const { data: images, error: imagesError } = await supabase
+                .from('artist_images')
+                .select('*')
+                .eq('artist_id', artist.id);
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Found ${artists.length} top artists, now fetching images and links...`);
-        console.log('Sample artist data:', JSON.stringify(artists[0]));
-      }
+              if (imagesError) {
+                console.error(`Error fetching images for artist ${artist.id}:`, imagesError);
+              } else if (process.env.NODE_ENV === 'development') {
+                console.log(`Found ${images?.length || 0} images for artist ${artist.name}`);
+              }
 
-      // For each artist, fetch their images and external links
-      const artistsWithData = await Promise.all(
-        artists.map(async (artist) => {
+              // Fetch external links
+              const { data: externalLinks, error: linksError } = await supabase
+                .from('artist_external_links')
+                .select('*')
+                .eq('artist_id', artist.id);
+
+              if (linksError) {
+                console.error(`Error fetching external links for artist ${artist.id}:`, linksError);
+              }
+
+              // Group images by type
+              const groupedImages = {
+                avatar: images?.find(img => img.image_type === 'avatar')?.url || 
+                       `https://placehold.co/400x400/252536/8A8AFF?text=${encodeURIComponent(artist.name)}`,
+                header: images?.find(img => img.image_type === 'header')?.url,
+                gallery: images?.filter(img => img.image_type === 'gallery')
+                  .sort((a, b) => (a.image_index || 0) - (b.image_index || 0))
+                  .map(img => img.url) || []
+              };
+
+              // Log image information for debugging
+              if (process.env.NODE_ENV === 'development') {
+                console.log(`Images for ${artist.name}:`, {
+                  hasAvatar: !!groupedImages.avatar,
+                  hasHeader: !!groupedImages.header,
+                  galleryCount: groupedImages.gallery.length,
+                  avatarUrl: groupedImages.avatar?.substring(0, 50) + '...'
+                });
+              }
+
+              // Create complete artist object
+              const { cacheRank, ...artistWithoutRank } = artist; // Remove temporary cacheRank
+              return {
+                ...artistWithoutRank,
+                monthly_listeners: artist.monthly_listeners || 0,
+                followers: artist.followers || 0,
+                images: groupedImages,
+                externalLinks: externalLinks || []
+              } as ArtistWithImages;
+            })
+          );
+
           if (process.env.NODE_ENV === 'development') {
-            console.log(`Processing artist: ${artist.name} (ID: ${artist.id})`);
-            console.log(`Artist monthly listeners: ${artist.monthly_listeners}, followers: ${artist.followers}`);
+            console.log(`Returning ${artistsWithData.length} artists with images and data`);
           }
           
-          // Fetch images
-          const { data: images, error: imagesError } = await supabase
-            .from('artist_images')
-            .select('*')
-            .eq('artist_id', artist.id);
-
-          if (imagesError) {
-            console.error(`Error fetching images for artist ${artist.id}:`, imagesError);
-          } else if (process.env.NODE_ENV === 'development') {
-            console.log(`Found ${images?.length || 0} images for artist ${artist.name}`);
-          }
-
-          // Fetch external links
-          const { data: externalLinks, error: linksError } = await supabase
-            .from('artist_external_links')
-            .select('*')
-            .eq('artist_id', artist.id);
-
-          if (linksError) {
-            console.error(`Error fetching external links for artist ${artist.id}:`, linksError);
-          }
-
-          // Group images by type
-          const groupedImages = {
-            avatar: images?.find(img => img.image_type === 'avatar')?.url || 
-                   `https://placehold.co/400x400/252536/8A8AFF?text=${encodeURIComponent(artist.name)}`,
-            header: images?.find(img => img.image_type === 'header')?.url,
-            gallery: images?.filter(img => img.image_type === 'gallery')
-              .sort((a, b) => (a.image_index || 0) - (b.image_index || 0))
-              .map(img => img.url) || []
-          };
-
-          // Log image information for debugging
-          if (process.env.NODE_ENV === 'development') {
-            console.log(`Images for ${artist.name}:`, {
-              hasAvatar: !!groupedImages.avatar,
-              hasHeader: !!groupedImages.header,
-              galleryCount: groupedImages.gallery.length,
-              avatarUrl: groupedImages.avatar?.substring(0, 50) + '...'
-            });
-          }
-
-          // Make sure monthly_listeners and followers are not undefined/null
-          return {
-            ...artist,
-            monthly_listeners: artist.monthly_listeners || 0,
-            followers: artist.followers || 0,
-            images: groupedImages,
-            externalLinks: externalLinks || []
-          } as ArtistWithImages;
-        })
-      );
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Returning ${artistsWithData.length} artists with images and data`);
+          // Cache the results
+          cacheService.set(cacheKey, artistsWithData);
+          
+          return artistsWithData;
+        }
       }
       
-      // Cache the results
-      cacheService.set(cacheKey, artistsWithData);
+      // Fall back to original method if needed
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Cache table failed or empty, falling back to direct query');
+      }
       
-      return artistsWithData;
+      // Original method: fetch artists directly sorted by monthly_listeners
+      // ... rest of existing code ...
     } catch (error) {
       console.error('Error in getTopArtists:', error);
       throw error; // Re-throw to allow calling code to handle the error

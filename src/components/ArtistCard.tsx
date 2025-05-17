@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArtistWithImages } from '../services/artistService';
+import { HomeArtist } from '../services/homeService';
 import { Check, Music, User, Users, Headphones } from 'lucide-react';
 import { formatNumber } from '../utils/format';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface ArtistCardProps {
-  artist: ArtistWithImages;
+  artist: ArtistWithImages | HomeArtist;
   rank?: number;
   showRank?: boolean;
 }

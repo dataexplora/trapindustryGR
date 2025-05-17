@@ -36,9 +36,7 @@ const translations: Translations = {  en: {
     'nav.discover': 'Discover',    
     'nav.hot_artists': 'Hot Artists',    
     'nav.songs': 'Songs',    
-    'about.us': 'About Us',    
-    'privacy.title': 'Privacy Policy',    
-    'terms.title': 'Terms of Use',    
+    'about.us': 'About Us',   
     'contact.us': 'Contact Us',
 
     // Discover page    
@@ -289,14 +287,12 @@ const translations: Translations = {  en: {
     'nav.hot_artists': 'Δημοφιλείς Καλλιτέχνες',    
     'nav.songs': 'Τραγούδια',    
     'about.us': 'Σχετικά με Εμάς',    
-    'privacy.title': 'Πολιτική Απορρήτου',    
-    'terms.title': 'Όροι Χρήσης',    
     'contact.us': 'Επικοινωνία',        
     
     // Discover page    
     'discover.title': 'Ανακαλύψτε την Ελληνική Urban Μουσική',    
     'discover.subtitle': 'Εξερευνήστε τα τελευταία κομμάτια, τους καλλιτέχνες σε άνοδο και τις επιδραστικές κυκλοφορίες που διαμορφώνουν την ελληνική urban κουλτούρα',    
-    'discover.filter.emerging': 'Νέα Ταλέντα',    
+    'discover.filter.emerging': 'Νέα Ταλέντα',
     'discover.filter.rising': 'Ανερχόμενα Αστέρια',    
     'discover.filter.all': 'Όλοι οι Καλλιτέχνες',    
     'discover.filter.listeners': 'Μηνιαίοι Ακροατές',    

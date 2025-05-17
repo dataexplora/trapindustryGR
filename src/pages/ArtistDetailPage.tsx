@@ -275,15 +275,15 @@ const ArtistDetailPage = () => {
       />
     
       <Layout>
-        <div className="relative">
+        <div className="relative">{/* AFTO EINAI TO HEADER */}
           <div 
-            className="h-64 bg-gradient-to-r from-indigo-900 to-purple-900 bg-center bg-cover"
-            style={{ backgroundImage: `url(${headerImage})` }}
+            className="h-[38rem] md:h-[48rem] lg:h-[60rem] bg-gradient-to-r from-indigo-900 to-purple-900 bg-center bg-cover"
+            style={{ backgroundImage: `url(${headerImage})` }} 
           >
             <div className="absolute inset-0 bg-black bg-opacity-50"></div>
           </div>
           <div className="container mx-auto px-4">
-            <div className="relative -mt-24">
+            <div className="relative -mt-[18rem] md:-mt-[18rem] lg:-mt-[24rem]"> {/* AFTO EINAI TO ARTIST CARD */}
               <div className="bg-dark-card rounded-xl shadow-xl p-6 border border-dark-border">
                 <div className="flex flex-col md:flex-row items-center md:items-start">
                   <img 

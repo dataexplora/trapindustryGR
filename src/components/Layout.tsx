@@ -129,7 +129,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="flex flex-col min-h-screen" key={`layout-${language}`}>
-      <header className="bg-gradient-to-r from-indigo-900 to-purple-900 text-white py-7 shadow-lg relative">
+      <header className="bg-gradient-to-r from-indigo-900 to-purple-900 text-white py-7 shadow-lg fixed top-0 w-full z-40">
         <div className="container mx-auto px-4">
           {/* Mobile Menu Button */}
           <button 
@@ -192,7 +192,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
           {/* Mobile Navigation Menu */}
           {isMenuOpen && (
-            <nav className="fixed inset-0 bg-gradient-to-r from-indigo-900/95 to-purple-900/95 backdrop-blur-sm lg:hidden z-40">
+            <nav className="fixed inset-0 bg-gradient-to-r from-indigo-900/95 to-purple-900/95 backdrop-blur-sm lg:hidden z-50">
               <div className="h-full flex items-center justify-center">
                 <ul className="flex flex-col space-y-8 text-center">
                   <li>
@@ -249,7 +249,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </header>
       
-      <main className="flex-grow bg-dark-background">
+      <main className="flex-grow bg-dark-background pt-20">
         {children}
       </main>
       

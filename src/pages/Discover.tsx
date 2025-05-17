@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Layout from '../components/Layout';
 import ArtistCard from '../components/ArtistCard';
 import { User, SlidersHorizontal, Users, Loader2, Sparkles, Filter, Clock, ArrowUp, TrendingUp, Star, Search } from 'lucide-react';
@@ -9,13 +9,22 @@ import SEO from '../components/SEO';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const Discover = () => {
-  const { allArtists, totalArtists, isLoading, error, refreshData } = useDiscoverArtists();
+  const { allArtists, totalArtists, isLoading, error, refreshData, loadData, dataLoaded } = useDiscoverArtists();
   const [minListeners, setMinListeners] = useState(10000);
   const [maxListeners, setMaxListeners] = useState(250000);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filterView, setFilterView] = useState<'all' | 'emerging' | 'rising'>('emerging');
   const [searchQuery, setSearchQuery] = useState('');
   const { t, language } = useLanguage();
+  
+  // Load data when component mounts
+  useEffect(() => {
+    // Only load if not already loaded
+    if (!dataLoaded && !isLoading) {
+      console.log('Discover: Loading artist data on mount');
+      loadData();
+    }
+  }, [dataLoaded, isLoading, loadData]);
   
   // Filter artists while preserving their global ranks
   const filteredArtists = useMemo(() => {
@@ -198,70 +207,27 @@ const Discover = () => {
             </div>
           ) : filteredArtists.length === 0 ? (
             <div className="text-center py-10 text-gray-400">
-              {searchQuery ? (
-                <div>
-                  <p className="text-xl mb-2">{t('discover.noSearchResults', 'No artists found matching "{0}"', searchQuery)}</p>
-                  <p className="text-gray-500">{t('discover.tryDifferent', 'Try a different search term or clear the search')}</p>
-                  <button 
-                    onClick={() => setSearchQuery('')}
-                    className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white"
-                  >
-                    {t('discover.clearSearch', 'Clear Search')}
-                  </button>
-                </div>
-              ) : (
-                <p>{t('discover.noResults', 'No results found')}</p>
+              <p>{t('discover.noResults', 'No artists found matching your criteria.')}</p>
+              {!dataLoaded && (
+                <button 
+                  onClick={() => loadData()}
+                  className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white"
+                >
+                  {t('discover.loadData', 'Load Artists Data')}
+                </button>
               )}
             </div>
           ) : (
-            <>
-              <div className="mb-8">
-                {filterView === 'emerging' && (
-                  <div className="bg-gradient-to-r from-indigo-900/30 to-transparent p-4 rounded-lg mb-6 border border-indigo-800/50">
-                    <h2 className="text-lg font-medium text-indigo-300 mb-2 flex items-center">
-                      <Sparkles className="h-4 w-4 mr-2 text-yellow-400" />
-                      {t('discover.emerging.title', 'Emerging Talent Spotlight')}
-                    </h2>
-                    <p className="text-gray-300">
-                      {t('discover.emerging.description', 'Discover the next wave of Greek urban artists on the rise. These emerging talents represent the future of the scene.')}
-                    </p>
-                  </div>
-                )}
-                {filterView === 'rising' && (
-                  <div className="bg-gradient-to-r from-purple-900/30 to-transparent p-4 rounded-lg mb-6 border border-purple-800/50">
-                    <h2 className="text-lg font-medium text-purple-300 mb-2 flex items-center">
-                      <TrendingUp className="h-4 w-4 mr-2 text-yellow-400" />
-                      {t('discover.rising.title', 'Rising Stars')}
-                    </h2>
-                    <p className="text-gray-300">
-                      {t('discover.rising.description', 'These artists are making waves and building significant audiences. They\'re positioned to break into the mainstream soon.')}
-                    </p>
-                  </div>
-                )}
-                {filterView === 'all' && (
-                  <div className="bg-gradient-to-r from-gray-800/30 to-transparent p-4 rounded-lg mb-6 border border-gray-700/50">
-                    <h2 className="text-lg font-medium text-gray-300 mb-2 flex items-center">
-                      <Users className="h-4 w-4 mr-2 text-yellow-400" />
-                      {t('discover.all.title', 'All Greek Urban Artists')}
-                    </h2>
-                    <p className="text-gray-300">
-                      {t('discover.all.description', 'Browse the complete collection of Greek urban artists, from underground talents to mainstream stars.')}
-                    </p>
-                  </div>
-                )}
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {filteredArtists.map((artist) => (
-                  <ArtistCard 
-                    key={artist.id} 
-                    artist={artist} 
-                    rank={artist.rank}
-                    showRank={true}
-                  />
-                ))}
-              </div>
-            </>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredArtists.map((artist) => (
+                <ArtistCard 
+                  key={artist.id} 
+                  artist={artist} 
+                  rank={artist.rank}
+                  showRank={true}
+                />
+              ))}
+            </div>
           )}
         </div>
       </Layout>

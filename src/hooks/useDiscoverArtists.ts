@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ArtistWithImages } from '@/services/artistService';
 
@@ -17,8 +17,9 @@ const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 export const useDiscoverArtists = () => {
   // Store all artists with their global ranks
   const [allArtistsWithRanks, setAllArtistsWithRanks] = useState<RankedArtist[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Start as false since we're not loading initially
   const [error, setError] = useState<string | null>(null);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   const getCachedData = (): CachedData | null => {
     try {
@@ -53,17 +54,22 @@ export const useDiscoverArtists = () => {
     }
   };
 
-  const fetchAllArtists = async (forceFetch: boolean = false) => {
+  const fetchAllArtists = useCallback(async (forceFetch: boolean = false) => {
+    // Skip if already loaded or loading, unless force refresh
+    if ((dataLoaded || isLoading) && !forceFetch) return;
+    
     try {
       setIsLoading(true);
       setError(null);
+      console.log('DiscoverArtists: Fetching all artists data...');
 
       // Check cache first if not forcing a fetch
       if (!forceFetch) {
         const cachedData = getCachedData();
         if (cachedData) {
-          console.log('Using cached artists data');
+          console.log('DiscoverArtists: Using cached artists data');
           setAllArtistsWithRanks(cachedData.artists);
+          setDataLoaded(true);
           setIsLoading(false);
           return;
         }
@@ -81,8 +87,11 @@ export const useDiscoverArtists = () => {
 
       if (!artists) {
         setAllArtistsWithRanks([]);
+        setDataLoaded(true);
         return;
       }
+
+      console.log(`DiscoverArtists: Fetched ${artists.length} artists, retrieving details...`);
 
       // For each artist, fetch their images and external links
       const artistsWithData = await Promise.all(
@@ -136,8 +145,10 @@ export const useDiscoverArtists = () => {
 
       // Save to cache
       setCachedData(artistsWithData);
+      console.log(`DiscoverArtists: Processed ${artistsWithData.length} artists with details`);
 
       setAllArtistsWithRanks(artistsWithData);
+      setDataLoaded(true);
     } catch (error: any) {
       console.error('Error fetching artists:', error);
       setError(error.message || 'Failed to fetch artists');
@@ -147,20 +158,26 @@ export const useDiscoverArtists = () => {
       if (cachedData) {
         console.log('Using cached data as fallback after fetch error');
         setAllArtistsWithRanks(cachedData.artists);
+        setDataLoaded(true);
       }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [dataLoaded, isLoading]);
 
-  const refreshData = () => {
+  // Load data is the public method to fetch data
+  const loadData = useCallback(() => {
+    return fetchAllArtists(false);
+  }, [fetchAllArtists]);
+
+  // Force refresh data
+  const refreshData = useCallback(() => {
     // Force fetch new data, bypassing cache
-    fetchAllArtists(true);
-  };
+    return fetchAllArtists(true);
+  }, [fetchAllArtists]);
 
-  useEffect(() => {
-    fetchAllArtists();
-  }, []);
+  // NO automatic data loading anymore!
+  // The useEffect to fetch data on mount has been removed
 
   // Return all artists with their global ranks
   return { 
@@ -168,6 +185,8 @@ export const useDiscoverArtists = () => {
     totalArtists: allArtistsWithRanks.length,
     isLoading, 
     error, 
-    refreshData 
+    loadData,
+    refreshData,
+    dataLoaded
   };
 }; 

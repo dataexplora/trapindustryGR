@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Track } from '../services/trackService';
+import { HomeTrack } from '../services/homeService';
 import { Music, ExternalLink, User, Disc, Play } from 'lucide-react';
 import { formatNumber } from '../utils/format';
 
 interface TrackRowProps {
-  track: Track;
+  track: Track | HomeTrack;
   rank: number;
   onPlay?: (trackId: string) => void;
 }
@@ -23,11 +24,12 @@ const TrackRow: React.FC<TrackRowProps> = ({ track, rank, onPlay }) => {
 
   // Format artist names as a comma-separated list
   const getArtistDisplay = () => {
-    if (track.artists && track.artists.length > 0) {
+    // For the original Track type with artists array
+    if ('artists' in track && track.artists && track.artists.length > 0) {
       return track.artists.map(artist => artist.name).join(', ');
     }
     
-    // Fallback to artist_name if available
+    // For HomeTrack or Track with artist_name property
     if (track.artist_name) {
       return track.artist_name;
     }
@@ -63,7 +65,7 @@ const TrackRow: React.FC<TrackRowProps> = ({ track, rank, onPlay }) => {
   if (process.env.NODE_ENV === 'development') {
     console.log(`Rendering TrackRow for ${track.name}`, {
       id: track.id,
-      artist: track.artist_name || (track.artists && track.artists.length > 0 ? track.artists[0].name : 'Unknown'),
+      artist: track.artist_name || ('artists' in track && track.artists && track.artists.length > 0 ? track.artists[0].name : 'Unknown'),
       album: track.album_name,
       play_count: track.play_count,
       hasImage: !!track.album_image?.url
@@ -150,15 +152,16 @@ const TrackRow: React.FC<TrackRowProps> = ({ track, rank, onPlay }) => {
             <Music className="h-3 w-3 mr-1" />
             {track.duration_ms ? formatDuration(track.duration_ms) : '0:00'}
             {track.share_url && (
-              <a 
-                href={track.share_url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="ml-2 text-gray-400 hover:text-indigo-400 transition-all"
-                onClick={(e) => e.stopPropagation()} // Prevent triggering the parent click
+              <span 
+                onClick={(e) => {
+                  e.preventDefault(); // Prevent the parent Link navigation
+                  e.stopPropagation();
+                  window.open(track.share_url, '_blank', 'noopener,noreferrer');
+                }}
+                className="ml-2 text-gray-400 hover:text-indigo-400 transition-all cursor-pointer"
               >
                 <ExternalLink className="h-3 w-3" />
-              </a>
+              </span>
             )}
           </div>
         </div>

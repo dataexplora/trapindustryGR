@@ -6,16 +6,16 @@ import TrackRow from '../components/TrackRow';
 import SpotifyPlayer from '../components/SpotifyPlayer';
 import { Button } from '@/components/ui/button';
 import { Music, AlertTriangle, User, Loader2 } from 'lucide-react';
-import { useData } from '@/context/DataContext';
+import { useHomeData } from '@/context/HomeDataContext';
 
 const HomePage = () => {
-  const { topArtists, topTracks, isLoading, error, refreshData } = useData();
+  const { topArtists, topTracks, isLoading, error, refreshData } = useHomeData();
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
   
   // Check if we're using fallback data
   const isFromHardcodedData = 
-    (topArtists.length > 0 && topArtists[0].id.includes('-id')) || 
-    (topTracks.length > 0 && topTracks[0].id.includes('track'));
+    (topArtists.length > 0 && topArtists[0]?.id?.includes('-id')) || 
+    (topTracks.length > 0 && topTracks[0]?.id?.includes('track'));
   
   // Function to handle playing a track
   const handlePlayTrack = (trackId: string) => {
@@ -25,8 +25,10 @@ const HomePage = () => {
   // Extract unique genres for keywords
   const uniqueGenres = new Set<string>();
   topArtists.forEach(artist => {
+    if (!artist) return; // Skip null artists
+    
     // Use optional chaining and type assertion to safely access genres
-    const genres = (artist as any).genres;
+    const genres = (artist as any)?.genres;
     if (genres && Array.isArray(genres)) {
       genres.forEach(genre => uniqueGenres.add(genre));
     }
@@ -50,8 +52,8 @@ const HomePage = () => {
     'top greek artists',
     'top greek songs',
     ...Array.from(uniqueGenres).map(genre => `greek ${genre}`),
-    ...topArtists.slice(0, 5).map(artist => artist.name),
-    ...topTracks.slice(0, 5).map(track => track.name)
+    ...topArtists.filter(artist => artist && artist.name).map(artist => artist.name),
+    ...topTracks.filter(track => track && track.name).map(track => track.name)
   ].join(', ');
 
   // Prepare structured data for the homepage
@@ -253,7 +255,7 @@ const HomePage = () => {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {topArtists.length > 0 ? (
-                  topArtists.map((artist, index) => (
+                  topArtists.filter(artist => artist && artist.id).map((artist, index) => (
                     <ArtistCard 
                       key={artist.id} 
                       artist={artist} 
@@ -284,7 +286,7 @@ const HomePage = () => {
               
               <div className="space-y-4">
                 {topTracks.length > 0 ? (
-                  topTracks.map((track, index) => (
+                  topTracks.filter(track => track && track.id).map((track, index) => (
                     <TrackRow 
                       key={track.id} 
                       track={track} 

@@ -300,7 +300,7 @@ const TrackDetailPage = () => {
                 )}
                 
                 {/* Track stats (desktop) */}
-                <div className="hidden md:grid grid-cols-3 gap-6 mt-8">
+                <div className="hidden md:grid grid-cols-2 gap-6 mt-8">
                   <div className="bg-dark-muted p-4 rounded-lg">
                     <div className="flex items-center mb-2">
                       <Music className="h-4 w-4 text-gray-400 mr-2" />
@@ -320,16 +320,6 @@ const TrackDetailPage = () => {
                       {formatDuration(track.duration_ms || 0)}
                     </div>
                   </div>
-                  
-                  <div className="bg-dark-muted p-4 rounded-lg">
-                    <div className="flex items-center mb-2">
-                      <Heart className="h-4 w-4 text-gray-400 mr-2" />
-                      <span className="text-gray-400 text-sm">Popularity</span>
-                    </div>
-                    <div className="text-2xl font-bold text-white">
-                      {track.popularity || '–'}
-                    </div>
-                  </div>
                 </div>
                 
                 {/* Action buttons */}
@@ -340,20 +330,7 @@ const TrackDetailPage = () => {
                   >
                     <Play className="h-4 w-4 mr-2" fill="white" />
                     Play on Spotify
-                  </button>
-                  
-                  {track.share_url && (
-                    <a 
-                      href={track.share_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="px-5 py-2.5 bg-dark-muted text-white rounded-lg flex items-center font-medium hover:bg-dark-muted/80 transition-all border border-dark-border"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Open in Spotify
-                    </a>
-                  )}
-                  
+                  </button>               
                   <button 
                     onClick={() => {
                       if (navigator.share) {
