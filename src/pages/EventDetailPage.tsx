@@ -22,10 +22,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { format, formatDistance, parseISO } from 'date-fns';
+import { formatGreekDate, formatGreekDateTime, formatGreekTimeOnly, getTimeFromNow } from '@/lib/date-utils';
 import SEO from '../components/SEO';
 import { useLanguage } from '../contexts/LanguageContext';
 import EventCard from '@/components/EventCard';
+import { GOOGLE_MAPS_API_KEY } from '@/config/env';
 
 const EventDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -74,20 +75,20 @@ const EventDetailPage: React.FC = () => {
     loadEventData();
   }, [id, t]);
   
-  // Format the event date/time
+  // Format the event date/time using utility functions
   const formattedDate = event?.startDate 
-    ? format(new Date(event.startDate), 'EEEE, MMMM d, yyyy')
+    ? formatGreekDate(event.startDate, 'EEEE, MMMM d, yyyy')
     : null;
     
   const formattedTime = event?.startDate 
-    ? format(new Date(event.startDate), 'h:mm a')
+    ? formatGreekTimeOnly(event.startDate)
     : null;
     
   const timeFromNow = event?.startDate
-    ? formatDistance(new Date(event.startDate), new Date(), { addSuffix: true })
+    ? getTimeFromNow(event.startDate)
     : null;
   
-  // Get the event type display name
+  // Get the event type display name - kept for internal use and future reference
   const getEventTypeLabel = () => {
     if (!event?.eventType) return 'Event';
     
@@ -102,7 +103,7 @@ const EventDetailPage: React.FC = () => {
     }
   };
   
-  // Badge color based on event type
+  // Badge color based on event type - kept for future reference
   const getBadgeStyle = () => {
     if (!event?.eventType) return 'bg-gray-600';
     
@@ -135,6 +136,134 @@ const EventDetailPage: React.FC = () => {
         console.error('Error copying link:', err);
       });
     }
+  };
+  
+  // Create structured data for schema.org Event markup for better search visibility
+  const createStructuredData = () => {
+    if (!event) return null;
+    
+    // Create schema.org Event structured data with only required/existing fields
+    const eventSchema: any = {
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      'name': event.title,
+      'startDate': event.startDate,
+      'location': {
+        '@type': 'Place',
+        'name': event.venueName,
+        'address': {
+          '@type': 'PostalAddress',
+          'addressLocality': event.city,
+          'addressRegion': 'Greece'
+        }
+      }
+    };
+    
+    // Only add fields that exist in the data
+    if (event.description) {
+      eventSchema.description = event.description;
+    }
+    
+    if (event.endDate) {
+      eventSchema.endDate = event.endDate;
+    }
+    
+    if (event.address) {
+      eventSchema.location.address.streetAddress = event.address;
+    }
+    
+    if (event.postalCode) {
+      eventSchema.location.address.postalCode = event.postalCode;
+    }
+    
+    if (event.images?.poster) {
+      eventSchema.image = event.images.poster;
+    }
+    
+    // Only add offers if we have ticket info
+    if (event.ticketUrl || (event.pricing && event.pricing.length > 0)) {
+      eventSchema.offers = {
+        '@type': 'Offer',
+        'url': event.ticketUrl || window.location.href,
+        'priceCurrency': 'EUR',
+        'availability': 'https://schema.org/InStock',
+        'validFrom': event.startDate
+      };
+      
+      // Only add price if we actually have pricing data
+      if (event.pricing && event.pricing.length > 0) {
+        eventSchema.offers.price = event.pricing[0].price.toString();
+      }
+    }
+    
+    // Only add performers if we have artists
+    if (event.artists && event.artists.length > 0) {
+      eventSchema.performer = event.artists.map(artist => ({
+        '@type': 'PerformingGroup',
+        'name': artist.name
+      }));
+    }
+    
+    // Only add organizer if it exists
+    if (event.organizer) {
+      eventSchema.organizer = {
+        '@type': 'Organization',
+        'name': event.organizer
+      };
+    }
+    
+    // Add event status
+    if (event.status) {
+      eventSchema.eventStatus = event.status === 'canceled' 
+        ? 'https://schema.org/EventCancelled'
+        : 'https://schema.org/EventScheduled';
+    }
+    
+    return eventSchema;
+  };
+  
+  // Generate enhanced keywords for better SEO visibility
+  const generateKeywords = () => {
+    if (!event) return [];
+    
+    // Start with guaranteed fields
+    const keywords = [
+      event.title,
+      `${event.title} ${event.city}`,
+      `${event.title} event`,
+      `events in ${event.city}`,
+      `${event.eventType} in ${event.city}`,
+    ];
+    
+    // Add venue name if it exists (it should be required)
+    if (event.venueName) {
+      keywords.push(event.venueName);
+      keywords.push(`${event.venueName} ${event.city}`);
+    }
+    
+    // Add artist-specific keywords only if artists exist
+    if (event.artists && event.artists.length > 0) {
+      event.artists.forEach(artist => {
+        keywords.push(`${artist.name} concert`);
+        keywords.push(`${artist.name} event`);
+        keywords.push(`${artist.name} ${event.city}`);
+        
+        if (event.venueName) {
+          keywords.push(`${artist.name} ${event.venueName}`);
+        }
+      });
+    }
+    
+    // Add tags as keywords only if tags exist
+    if (event.tags && event.tags.length > 0) {
+      event.tags.forEach(tag => {
+        keywords.push(tag);
+        keywords.push(`${tag} event`);
+        keywords.push(`${tag} ${event.city}`);
+      });
+    }
+    
+    return keywords;
   };
   
   if (isLoading) {
@@ -202,11 +331,13 @@ const EventDetailPage: React.FC = () => {
   return (
     <>
       <SEO
-        title={`${event.title} | ${getEventTypeLabel()} in ${event.city}`}
-        description={event.description || `Join us for this exciting ${getEventTypeLabel().toLowerCase()} in ${event.city}!`}
+        title={`${event.title} | Event in ${event.city}`}
+        description={event.description || `Event in ${event.city}`}
         type="event"
         section={t('events.seo.section', 'Events')}
         image={event.images?.poster}
+        keywords={generateKeywords()}
+        structuredData={createStructuredData()}
       />
       <Layout>
         {/* Back button */}
@@ -257,16 +388,6 @@ const EventDetailPage: React.FC = () => {
               {/* Event details */}
               <div className="lg:col-span-8 xl:col-span-9">
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge className={`${getBadgeStyle()} px-3 py-1`}>
-                    {getEventTypeLabel()}
-                  </Badge>
-                  
-                  {event.isFeatured && (
-                    <Badge className="bg-yellow-600 px-3 py-1">
-                      {t('eventDetail.featured', 'Featured')}
-                    </Badge>
-                  )}
-                  
                   {event.status !== 'upcoming' && (
                     <Badge 
                       className={
@@ -437,25 +558,14 @@ const EventDetailPage: React.FC = () => {
                 </h2>
                 
                 <div className="bg-slate-900/60 border border-slate-800 rounded-lg overflow-hidden">
-                  {event.locationLat && event.locationLng ? (
-                    <div className="h-72">
-                      <iframe
-                        title={event.venueName}
-                        className="w-full h-full border-0"
-                        src={`https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${event.locationLat},${event.locationLng}&zoom=15`}
-                        allowFullScreen
-                      ></iframe>
-                    </div>
-                  ) : (
-                    <div className="h-72 bg-slate-900 flex items-center justify-center">
-                      <div className="text-center">
-                        <MapPin className="h-12 w-12 text-slate-700 mx-auto mb-3" />
-                        <p className="text-slate-500">
-                          {t('eventDetail.noMap', 'Map not available')}
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                  <div className="h-72">
+                    <iframe
+                      title={event.venueName}
+                      className="w-full h-full border-0"
+                      src={`https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${encodeURIComponent(`${event.venueName} ${event.city}`)}&language=en&zoom=15`}
+                      allowFullScreen
+                    ></iframe>
+                  </div>
                   
                   <div className="p-4">
                     <h3 className="text-lg font-semibold text-white mb-1">

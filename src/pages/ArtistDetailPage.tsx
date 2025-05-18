@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArtistWithImages, artistService } from '../services/artistService';
+import { EventListItem, eventService } from '../services/eventService';
 import Layout from '../components/Layout';
 import SpotifyPlayer from '../components/SpotifyPlayer';
 import ImageGallery from '../components/ImageGallery';
 import SEO from '../components/SEO';
 import ArtistReactionButtons from '../components/ArtistReactionButtons';
 import CompactArtistReactions from '../components/CompactArtistReactions';
+import EventCard from '@/components/EventCard';
 import { pageCache } from '../lib/pageCache';
 import { 
   Check, Music, User, Users, ExternalLink, Calendar, Heart, 
@@ -67,6 +69,13 @@ const ArtistDetailPage = () => {
     }
     return [];
   });
+  const [upcomingEvents, setUpcomingEvents] = useState<EventListItem[]>(() => {
+    if (id) {
+      const cachedData = pageCache.get<EventListItem[]>(`artist-events-${id}`);
+      return cachedData || [];
+    }
+    return [];
+  });
   const [displayedTracks, setDisplayedTracks] = useState(5);
   const [totalStreams, setTotalStreams] = useState<number>(() => {
     // Initial state from page cache if available
@@ -114,10 +123,11 @@ const ArtistDetailPage = () => {
       
       try {
         // Fetch all data in parallel for performance
-        const [artistData, tracksData, streamsCount] = await Promise.all([
+        const [artistData, tracksData, streamsCount, eventsData] = await Promise.all([
           artistService.getArtistById(id),
           artistService.getArtistTopTracks(id, 20),
-          artistService.getArtistTotalStreamCount(id)
+          artistService.getArtistTotalStreamCount(id),
+          eventService.getEventsByArtist(id, 6)
         ]);
         
         // Only update state if component is still mounted
@@ -126,11 +136,13 @@ const ArtistDetailPage = () => {
             setArtist(artistData);
             setTopTracks(tracksData);
             setTotalStreams(streamsCount);
+            setUpcomingEvents(eventsData);
             
             // Store in page cache for future navigations (24 hour expiry)
             pageCache.set(`artist-page-${id}`, artistData, 24 * 60 * 60 * 1000);
             pageCache.set(`artist-tracks-${id}`, tracksData, 24 * 60 * 60 * 1000);
             pageCache.set(`artist-streams-${id}`, streamsCount, 24 * 60 * 60 * 1000);
+            pageCache.set(`artist-events-${id}`, eventsData, 24 * 60 * 60 * 1000);
           } else {
             setDataLoadError("Artist not found");
           }
@@ -259,15 +271,15 @@ const ArtistDetailPage = () => {
 
   return (
     <>
-      <SEO 
+      <SEO
         title={`${artist.name} - ${artist.monthly_listeners ? formatNumber(artist.monthly_listeners) + ' Monthly Listeners' : 'Greek Artist'} | Urban Greece`}
         description={artist.biography ? cleanBiography(artist.biography).substring(0, 160) : `Discover ${artist.name}, a popular Greek artist with ${formatNumber(artist.monthly_listeners || 0)} monthly listeners and ${formatNumber(artist.followers || 0)} followers.`}
         image={avatarImage}
         type="profile"
-        keywords={enhancedKeywords}
         author={artist.name}
         section="Artists"
         category="Music Artist"
+        keywords={enhancedKeywords}
         followers={artist.followers}
         monthlyListeners={artist.monthly_listeners}
         socialLinks={socialLinks}
@@ -542,6 +554,47 @@ const ArtistDetailPage = () => {
             <p className="text-center text-gray-400">No gallery images available for this artist.</p>
           )}
         </div>
+
+        {/* Upcoming Events Section */}
+        {upcomingEvents.length > 0 && (
+          <section className="py-10 px-4">
+            <div className="container mx-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center">
+                  <Calendar className="h-5 w-5 md:h-6 md:w-6 mr-2 text-indigo-400" />
+                  Upcoming Events
+                </h2>
+                
+                <Link 
+                  to="/events" 
+                  className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+                >
+                  View all events
+                </Link>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {upcomingEvents.map(event => (
+                  <EventCard 
+                    key={event.id} 
+                    event={event} 
+                  />
+                ))}
+              </div>
+              
+              {/* If no events */}
+              {upcomingEvents.length === 0 && (
+                <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 text-center">
+                  <Calendar className="h-12 w-12 mx-auto mb-3 text-slate-500" />
+                  <h3 className="text-lg font-medium text-white mb-2">No Upcoming Events</h3>
+                  <p className="text-slate-400">
+                    {artist.name} doesn't have any upcoming events scheduled at the moment.
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
       </Layout>
     </>
   );

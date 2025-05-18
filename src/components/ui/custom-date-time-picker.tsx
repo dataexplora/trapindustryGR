@@ -1,11 +1,10 @@
-import React from "react";
+import React, { forwardRef, Ref } from "react";
 import { CustomDatePicker } from "@/components/ui/custom-date-picker";
 import { TimeSelect } from "./time-select";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { Button } from "./button";
 import { Calendar, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format, set } from "date-fns";
 
 interface CustomDateTimePickerProps {
   value?: Date;
@@ -18,7 +17,7 @@ interface CustomDateTimePickerProps {
   showLabel?: boolean;
 }
 
-export function CustomDateTimePicker({
+export const CustomDateTimePicker = forwardRef(({
   value,
   onChange,
   disabled = false,
@@ -27,18 +26,14 @@ export function CustomDateTimePicker({
   minDate,
   className,
   showLabel = false,
-}: CustomDateTimePickerProps) {
+}: CustomDateTimePickerProps, ref: Ref<HTMLDivElement>) => {
   const hour = value ? value.getHours() : 18;
   const minute = value ? value.getMinutes() : 0;
   
   const handleDateChange = (date: Date) => {
     // Keep the existing time values
-    const newDate = set(date, {
-      hours: hour,
-      minutes: minute,
-      seconds: 0,
-      milliseconds: 0
-    });
+    const newDate = new Date(date);
+    newDate.setHours(hour, minute, 0, 0);
     onChange(newDate);
   };
   
@@ -46,18 +41,12 @@ export function CustomDateTimePicker({
     if (!value) {
       // If no date yet, use today's date with the selected time
       const today = new Date();
-      const newDate = set(today, {
-        hours: newHour,
-        minutes: minute,
-        seconds: 0,
-        milliseconds: 0
-      });
-      onChange(newDate);
+      today.setHours(newHour, minute, 0, 0);
+      onChange(today);
     } else {
       // Update existing date with new time
-      const newDate = set(value, {
-        hours: newHour
-      });
+      const newDate = new Date(value);
+      newDate.setHours(newHour);
       onChange(newDate);
     }
   };
@@ -66,24 +55,35 @@ export function CustomDateTimePicker({
     if (!value) {
       // If no date yet, use today's date with the selected time
       const today = new Date();
-      const newDate = set(today, {
-        hours: hour,
-        minutes: newMinute,
-        seconds: 0,
-        milliseconds: 0
-      });
-      onChange(newDate);
+      today.setHours(hour, newMinute, 0, 0);
+      onChange(today);
     } else {
       // Update existing date with new time
-      const newDate = set(value, {
-        minutes: newMinute
-      });
+      const newDate = new Date(value);
+      newDate.setMinutes(newMinute);
       onChange(newDate);
     }
   };
+
+  // Direct time formatting without libraries
+  const formatTime = (date: Date): string => {
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 || 12;
+    return `${hour12}:${minutes < 10 ? '0' + minutes : minutes} ${ampm}`;
+  };
+
+  // Direct date formatting without libraries
+  const formatDate = (date: Date): string => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  };
   
   return (
-    <div className={cn("w-full", className)}>
+    <div className={cn("w-full", className)} ref={ref}>
       {showLabel && label && (
         <p className="text-sm font-medium mb-1.5 text-white">{label}</p>
       )}
@@ -96,9 +96,9 @@ export function CustomDateTimePicker({
           >
             {value ? (
               <>
-                {format(value, "EEE, MMMM d, yyyy")}
+                {formatDate(value)}
                 <span className="text-indigo-400 ml-2">
-                  {format(value, "h:mm a")}
+                  {formatTime(value)}
                 </span>
               </>
             ) : (
@@ -137,4 +137,4 @@ export function CustomDateTimePicker({
       </Popover>
     </div>
   );
-} 
+}); 

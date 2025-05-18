@@ -7,15 +7,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Calendar, Camera, MapPin, ExternalLink, CalendarCheck, Tag, Users, Save, Euro, Clock } from 'lucide-react';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { format, set } from 'date-fns';
 import SEO from '../components/SEO';
 import { artistService, ArtistOption } from '@/services/artistService';
 import { MultiSelect } from '@/components/ui/multiselect';
 import { PriceTierEditor, PriceTier } from '@/components/ui/price-tier-editor';
 import { TimePickerInput } from '@/components/ui/time-picker';
 import { CustomDateTimePicker } from "@/components/ui/custom-date-time-picker";
-
-// UI Components
 import {
   Form,
   FormControl,
@@ -352,30 +349,37 @@ const AddEventPage: React.FC = () => {
     try {
       setIsSubmitting(true);
       
-      // Combine date and time for start date
-      const startDateTime = set(values.startDate, {
-        hours: values.startTimeHour || 0,
-        minutes: values.startTimeMinute || 0,
-        seconds: 0,
-        milliseconds: 0
-      });
+      // Combine date and time for start date - using plain JavaScript
+      const startDateTime = new Date(values.startDate);
+      startDateTime.setHours(values.startTimeHour || 0, values.startTimeMinute || 0, 0, 0);
       
-      // Combine date and time for end date if it exists
+      // Combine date and time for end date if it exists - using plain JavaScript
       let endDateTime = null;
       if (values.endDate) {
-        endDateTime = set(values.endDate, {
-          hours: values.endTimeHour !== undefined ? values.endTimeHour : 23,
-          minutes: values.endTimeMinute !== undefined ? values.endTimeMinute : 59,
-          seconds: 59,
-          milliseconds: 0
-        });
+        endDateTime = new Date(values.endDate);
+        endDateTime.setHours(
+          values.endTimeHour !== undefined ? values.endTimeHour : 23,
+          values.endTimeMinute !== undefined ? values.endTimeMinute : 59,
+          59,
+          0
+        );
       }
       
-      // Format dates for database insertion
-      const formattedStartDate = format(startDateTime, "yyyy-MM-dd'T'HH:mm:ss");
-      const formattedEndDate = endDateTime 
-        ? format(endDateTime, "yyyy-MM-dd'T'HH:mm:ss")
-        : null;
+      // Format dates for database insertion with direct string manipulation
+      // Format: YYYY-MM-DD HH:MM:SS
+      const formatDateForDB = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      };
+      
+      const formattedStartDate = formatDateForDB(startDateTime);
+      const formattedEndDate = endDateTime ? formatDateForDB(endDateTime) : null;
       
       // Process tags
       const tagsList = values.tags 

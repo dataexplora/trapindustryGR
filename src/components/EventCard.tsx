@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { EventListItem } from '@/services/eventService';
 import { Calendar, MapPin, Tag, Users, ExternalLink, Clock } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatGreekDateOnly, formatGreekTimeOnly } from '@/lib/date-utils';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -22,11 +22,11 @@ const EventCard: React.FC<EventCardProps> = ({
   
   const posterImage = event.posterUrl || defaultImage;
   
-  // Format date
-  const formattedDate = event.startDate ? format(new Date(event.startDate), 'EEE, MMM d, yyyy') : 'TBA';
-  const formattedTime = event.startDate ? format(new Date(event.startDate), 'h:mm a') : '';
+  // Format date with Athens timezone using utility functions
+  const formattedDate = event.startDate ? formatGreekDateOnly(event.startDate) : 'TBA';
+  const formattedTime = event.startDate ? formatGreekTimeOnly(event.startDate) : '';
   
-  // Get event type label
+  // Get event type label - kept for possible internal usage or future reference
   const getEventTypeLabel = () => {
     switch(event.eventType) {
       case 'concert': return 'Concert';
@@ -39,7 +39,7 @@ const EventCard: React.FC<EventCardProps> = ({
     }
   };
   
-  // Badge color based on event type
+  // Badge color based on event type - kept for possible future reference
   const getBadgeStyle = () => {
     switch(event.eventType) {
       case 'concert': return 'bg-indigo-600 hover:bg-indigo-700';
@@ -71,17 +71,6 @@ const EventCard: React.FC<EventCardProps> = ({
         </div>
         
         <div className="absolute bottom-0 left-0 right-0 p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Badge className={cn("px-3 py-1 font-medium", getBadgeStyle())}>
-              {getEventTypeLabel()}
-            </Badge>
-            {event.isFeatured && (
-              <Badge className="bg-yellow-600 hover:bg-yellow-700 font-medium">
-                Featured
-              </Badge>
-            )}
-          </div>
-          
           <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-sm">{event.title}</h3>
           
           <div className="flex flex-wrap gap-4 text-sm text-white/90">
@@ -126,10 +115,6 @@ const EventCard: React.FC<EventCardProps> = ({
             <span className="truncate">{event.city}</span>
           </div>
         </div>
-        
-        <Badge className={cn("px-2 py-1 text-xs font-medium", getBadgeStyle())}>
-          {getEventTypeLabel()}
-        </Badge>
       </Link>
     );
   }
@@ -150,17 +135,6 @@ const EventCard: React.FC<EventCardProps> = ({
             alt={event.title} 
             className="h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-105"
           />
-          <div className="absolute top-0 left-0 right-0 p-3 flex justify-between z-10">
-            <Badge className={cn("px-3 py-1 font-medium", getBadgeStyle())}>
-              {getEventTypeLabel()}
-            </Badge>
-            
-            {event.isFeatured && (
-              <Badge className="bg-yellow-600 hover:bg-yellow-700">
-                Featured
-              </Badge>
-            )}
-          </div>
         </div>
       </div>
       
@@ -168,7 +142,7 @@ const EventCard: React.FC<EventCardProps> = ({
         <h3 className="text-xl font-semibold text-white mb-2 line-clamp-1">{event.title}</h3>
         
         <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-          {event.description || `Join us for this exciting ${getEventTypeLabel().toLowerCase()} in ${event.city}!`}
+          {event.description || `Join us for this exciting event in ${event.city}!`}
         </p>
         
         <div className="space-y-2">

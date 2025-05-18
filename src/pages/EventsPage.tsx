@@ -18,6 +18,84 @@ import {
   CarouselPrevious,
 } from "../components/ui/carousel";
 
+// Create structured data for the events listing page
+const createEventListingStructuredData = (events: EventListItem[]) => {
+  if (!events || events.length === 0) return null;
+  
+  // Create schema.org ItemList structured data for event listings
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    'itemListElement': events.slice(0, 10).map((event, index) => {
+      // Base event item with guaranteed fields
+      const eventItem: any = {
+        '@type': 'ListItem',
+        'position': index + 1,
+        'item': {
+          '@type': 'Event',
+          'name': event.title,
+          'url': `${window.location.origin}/events/${event.id}`,
+          'location': {
+            '@type': 'Place',
+            'name': event.venueName,
+            'address': {
+              '@type': 'PostalAddress',
+              'addressLocality': event.city,
+              'addressRegion': 'Greece'
+            }
+          },
+          'startDate': event.startDate
+        }
+      };
+      
+      // Only add image if it exists
+      if (event.posterUrl) {
+        eventItem.item.image = event.posterUrl;
+      }
+      
+      return eventItem;
+    }),
+    'numberOfItems': events.length,
+    'name': 'Upcoming Events in Greece'
+  };
+};
+
+// Generate enhanced keywords for better SEO
+const generateEventListingKeywords = (events: EventListItem[]) => {
+  if (!events || events.length === 0) {
+    return [
+      'events in Greece', 
+      'Greek events', 
+      'upcoming events Greece'
+    ];
+  }
+  
+  const baseKeywords = [
+    'events in Greece',
+    'Greek events',
+    'upcoming events Greece'
+  ];
+  
+  // Add city-specific keywords from the guaranteed city field
+  const cities = new Set(events.map(event => event.city));
+  cities.forEach(city => {
+    if (city) {
+      baseKeywords.push(`events in ${city}`);
+    }
+  });
+  
+  // Add event type keywords if they exist
+  const eventTypes = new Set(events.map(event => event.eventType).filter(Boolean));
+  eventTypes.forEach(type => {
+    if (type) {
+      const readableType = type.replace('_', ' ');
+      baseKeywords.push(`${readableType} Greece`);
+    }
+  });
+  
+  return baseKeywords;
+};
+
 // Event filter types
 type FilterState = {
   query: string;
@@ -153,7 +231,8 @@ const EventsPage: React.FC = () => {
         description={t('events.seo.description', 'Discover upcoming urban culture events in Greece. Find concerts, dance contests, street events, and more across Athens, Thessaloniki, and other cities.')}
         type="website"
         section={t('events.seo.section', 'Events')}
-        category="Events Directory"
+        keywords={generateEventListingKeywords(allEvents)}
+        structuredData={createEventListingStructuredData(filteredEvents.length > 0 ? filteredEvents : featuredEvents)}
       />
       <Layout>
         {/* Hero section with featured events */}
