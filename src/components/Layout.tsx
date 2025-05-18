@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { TrendingUp, Instagram, Twitter, Youtube, Menu, X, Disc3 } from 'lucide-react';
+import { TrendingUp, Instagram, Twitter, Youtube, Menu, X, Disc3, Globe } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import LanguageToggle from './LanguageToggle';
 import FloatingLanguageToggle from './FloatingLanguageToggle';
 import { useLanguage } from '../contexts/LanguageContext';
+import { Switch } from '@/components/ui/switch';
+import { toast } from '@/components/ui/use-toast';
 
 declare global {
   interface Window {

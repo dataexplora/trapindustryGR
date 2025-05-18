@@ -6,12 +6,26 @@ import TrackRow from '../components/TrackRow';
 import FeaturedEvents from '../components/FeaturedEvents';
 import SpotifyPlayer from '../components/SpotifyPlayer';
 import { Button } from '@/components/ui/button';
-import { Music, AlertTriangle, User, Loader2 } from 'lucide-react';
+import { Music, AlertTriangle, User, Loader2, RefreshCw } from 'lucide-react';
 import { useHomeData } from '@/context/HomeDataContext';
+import { useAuth } from '@/lib/auth';
+import { checkSupabaseConnection } from '@/lib/supabase';
 
 const HomePage = () => {
   const { topArtists, topTracks, isLoading, error, refreshData } = useHomeData();
+  const { isLoading: isAuthLoading } = useAuth();
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'ok' | 'error'>('checking');
+  
+  useEffect(() => {
+    // Check Supabase connection on mount
+    const checkConnection = async () => {
+      const isConnected = await checkSupabaseConnection();
+      setConnectionStatus(isConnected ? 'ok' : 'error');
+    };
+    
+    checkConnection();
+  }, []);
   
   // Check if we're using fallback data
   const isFromHardcodedData = 
@@ -203,11 +217,39 @@ const HomePage = () => {
       </div>
 
       <div className="container mx-auto py-12 px-4">
-        {isLoading ? (
+        {connectionStatus === 'error' && (
+          <div className="text-center p-8 bg-red-900/20 rounded-lg border border-red-800 mb-8">
+            <h2 className="text-xl font-bold text-red-400 mb-2">Database Connection Error</h2>
+            <p className="text-red-300 mb-4">Unable to connect to the database. This may be due to network issues or server maintenance.</p>
+            <Button 
+              variant="outline"
+              className="mt-2 border-red-700 text-red-400 hover:bg-red-900/30"
+              onClick={() => window.location.reload()}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh Page
+            </Button>
+          </div>
+        )}
+        
+        {(isLoading || isAuthLoading) ? (
           <div className="flex justify-center items-center h-64">
-            <div className="flex items-center space-x-2 text-xl text-gray-300">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <span>Loading music data...</span>
+            <div className="flex flex-col items-center space-y-4 text-gray-300">
+              <div className="flex items-center space-x-2 text-xl">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span>Loading music data...</span>
+              </div>
+              {isAuthLoading && (
+                <p className="text-sm text-gray-400">Checking authentication...</p>
+              )}
+              <Button 
+                variant="outline"
+                className="mt-2 border-gray-700 text-gray-400 hover:bg-gray-900/30"
+                onClick={() => window.location.reload()}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh Page
+              </Button>
             </div>
           </div>
         ) : error ? (
