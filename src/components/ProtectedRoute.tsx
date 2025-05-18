@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth, UserRole } from '@/lib/auth';
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { LogIn } from 'lucide-react';
@@ -14,11 +14,11 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ 
   children, 
   requiredRoles = [], 
-  artistIdParam 
+  artistIdParam
 }: ProtectedRouteProps) => {
   const { user, userData, isLoading, hasRole, signInWithGoogle } = useAuth();
   const location = useLocation();
-
+  
   // Log data for debugging
   useEffect(() => {
     console.log('Protected route check:', {
@@ -29,13 +29,8 @@ const ProtectedRoute = ({
       artistIdParam
     });
     
-    // More detailed role logging
-    if (userData && requiredRoles.length > 0) {
+    if (userData?.roles) {
       console.log('User roles:', userData.roles);
-      requiredRoles.forEach(role => {
-        const hasThisRole = userData.roles.includes(role);
-        console.log(`Does user have role "${role}"? ${hasThisRole}`);
-      });
     }
   }, [isLoading, user, userData, requiredRoles, artistIdParam]);
 
@@ -49,7 +44,7 @@ const ProtectedRoute = ({
     );
   }
 
-  // If user is not authenticated, show login guardian page
+  // If user is not authenticated, redirect to login
   if (!user) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-white">
@@ -64,7 +59,11 @@ const ProtectedRoute = ({
           <h1 className="text-2xl font-bold mb-4 text-gray-800">Staff Area</h1>
           <p className="text-gray-600 mb-8">Please sign in with your staff account to continue</p>
           <Button 
-            onClick={signInWithGoogle}
+            onClick={() => {
+              signInWithGoogle().catch(err => {
+                console.error('Sign in error:', err);
+              });
+            }}
             size="lg"
             className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
           >
@@ -76,21 +75,18 @@ const ProtectedRoute = ({
     );
   }
 
-  // FIXED: Check if the user has any of the required roles
-  // Using a direct check on userData.roles instead of the hasRole function
+  // Check if the user has any of the required roles
   const hasRequiredRole = requiredRoles.length === 0 || 
     (userData?.roles && requiredRoles.some(role => userData.roles.includes(role)));
-
-  // Log the result of role check
-  console.log(`Role check result: ${hasRequiredRole ? 'PASS' : 'FAIL'}`);
   
+  console.log(`Role check result for ${requiredRoles.join(', ')}: ${hasRequiredRole ? 'PASS' : 'FAIL'}`);
+
   // If artist ID parameter is provided, check if the user can manage this artist
-  // This is useful for routes like /artist/:id/edit
   const canManageCurrentArtist = artistIdParam 
     ? (userData?.roles?.includes('admin') || (userData?.artistIds?.includes(artistIdParam) ?? false))
     : true;
 
-  // If the user doesn't have the required role or cannot manage the current artist, show access denied screen
+  // If the user doesn't have the required role, show access denied
   if (!hasRequiredRole || !canManageCurrentArtist) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-white">
@@ -112,11 +108,11 @@ const ProtectedRoute = ({
             )}
           </p>
           <Button 
-            onClick={() => window.location.href = '/'}
+            onClick={() => window.location.href = '/admin-check'}
             variant="outline"
             className="border-gray-300 text-gray-700"
           >
-            Return to Homepage
+            Check Admin Status
           </Button>
         </div>
       </div>

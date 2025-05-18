@@ -1,47 +1,116 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// More comprehensive error checking
-if (!supabaseUrl || !supabaseKey) {
-  console.error('CRITICAL ERROR: Missing Supabase credentials. Please make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your .env file');
-  // Set fallback values to prevent app from crashing, but the client won't work
-  // This is just so we can render a meaningful error UI instead of crashing
-} 
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables');
+}
 
-// Create Supabase client with additional options
-export const supabase = createClient(supabaseUrl, supabaseKey, {
+// Connection monitoring
+let lastConnectionAttempt = 0;
+let connectionStatus = 'unknown';
+let connectionErrors = 0;
+
+// Create a client with auth timeout and auto refresh
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true,
     autoRefreshToken: true,
+    persistSession: true,
     detectSessionInUrl: true,
+    flowType: 'implicit',
+    // Lower default JWT expiry threshold to prevent future date issues
+    jwtExpiryMargin: 10, // 10 seconds
   },
+  db: {
+    schema: 'public',
+  },
+  global: {
+    headers: {
+      'x-application-name': 'urban-greece-webapp',
+    },
+    // Set a reasonable timeout to prevent hanging requests
+    fetch: async (url, options = {}) => {
+      // Update connection stats
+      lastConnectionAttempt = Date.now();
+      
+      // Create a timeout for the request
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Request timeout'));
+        }, 5000); // 5 second timeout
+      });
+      
+      try {
+        // Race the fetch against a timeout
+        const response = await Promise.race([
+          fetch(url, {
+            ...options,
+            // Override cache control for better reliability
+            cache: 'no-cache',
+          }),
+          timeoutPromise
+        ]);
+        
+        // Check if the response is OK
+        if (response.ok) {
+          connectionStatus = 'connected';
+          // Reset error counter on success
+          connectionErrors = 0; 
+        } else {
+          connectionStatus = 'error';
+          connectionErrors++;
+          console.error(`Supabase API error: ${response.status} ${response.statusText}`);
+        }
+        
+        return response;
+      } catch (error) {
+        // Network error
+        connectionStatus = 'disconnected';
+        connectionErrors++;
+        console.error('Supabase connection error:', error);
+        throw error;
+      }
+    }
+  }
 });
 
-// Verify connection on startup
-(async () => {
-  try {
-    // Simple ping test using system time query
-    const { data, error } = await supabase.from('user_roles').select('count', { count: 'exact' }).limit(1);
-    
-    if (error) {
-      throw error;
-    }
-    
-    console.log('✅ Supabase connection verified');
-  } catch (err) {
-    console.error('❌ Supabase connection failed:', err);
-    // We don't throw here to allow the app to load, but it will show proper error states
+// Monitor session expiration
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'TOKEN_REFRESHED') {
+    console.log('Supabase auth token refreshed');
+  } else if (event === 'SIGNED_OUT') {
+    console.log('Supabase user signed out');
   }
-})();
+});
 
-// Function to check if Supabase is properly configured
-export const checkSupabaseConnection = async (): Promise<boolean> => {
+// Health check function
+export const checkSupabaseConnection = async () => {
   try {
-    const { error } = await supabase.from('user_roles').select('count', { count: 'exact' }).limit(1);
-    return !error;
-  } catch (err) {
-    return false;
+    const startTime = Date.now();
+    const { data, error } = await supabase.from('user_roles').select('count');
+    const endTime = Date.now();
+    
+    return {
+      status: error ? 'error' : 'connected',
+      latency: endTime - startTime,
+      timestamp: new Date().toISOString(),
+      error: error ? error.message : null,
+      errorCount: connectionErrors
+    };
+  } catch (e: any) {
+    return {
+      status: 'disconnected',
+      error: e.message,
+      timestamp: new Date().toISOString(),
+      errorCount: connectionErrors
+    };
   }
-}; 
+};
+
+// Get connection status
+export const getConnectionStatus = () => ({
+  status: connectionStatus,
+  lastAttempt: lastConnectionAttempt > 0 ? new Date(lastConnectionAttempt).toISOString() : null,
+  errorCount: connectionErrors
+}); 

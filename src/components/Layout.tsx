@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { TrendingUp, Instagram, Twitter, Youtube, Menu, X, Disc3, Globe } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { TrendingUp, Instagram, Twitter, Youtube, Menu, X, Disc3, Globe, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import LanguageToggle from './LanguageToggle';
 import FloatingLanguageToggle from './FloatingLanguageToggle';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '../lib/auth';
 
 declare global {
   interface Window {
@@ -16,6 +17,7 @@ declare global {
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [showCaptcha, setShowCaptcha] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -23,6 +25,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const recaptchaRef = useRef<HTMLDivElement>(null);
   const { t, language } = useLanguage();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -129,6 +132,12 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Handle sign out with redirect
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   // Add Events to the links array
   const links = [
     { path: '/', text: 'Home' },
@@ -199,6 +208,17 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                     {t('labels.title', 'Labels')}
                   </Link>
                 </li>
+                {user && (
+                  <li>
+                    <button 
+                      onClick={handleSignOut}
+                      className="flex items-center text-white/70 hover:text-white/90 transition-colors ml-4"
+                    >
+                      <LogOut className="h-4 w-4 mr-1" />
+                      Sign Out
+                    </button>
+                  </li>
+                )}
                 <li className="ml-2">
                   <LanguageToggle className="hidden lg:block" />
                 </li>
@@ -258,6 +278,20 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                       {t('labels.title', 'Labels')}
                     </Link>
                   </li>
+                  {user && (
+                    <li>
+                      <button 
+                        onClick={() => {
+                          handleSignOut();
+                          setIsMenuOpen(false);
+                        }}
+                        className="text-2xl font-medium flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                      >
+                        <LogOut className="h-5 w-5 mr-2" />
+                        Sign Out
+                      </button>
+                    </li>
+                  )}
                 </ul>
               </div>
             </nav>

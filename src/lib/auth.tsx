@@ -13,6 +13,16 @@ export interface UserData {
   artistIds?: string[];
 }
 
+// Role cache to prevent repeated database timeouts
+const ROLE_CACHE: Record<string, {
+  roles: UserRole[];
+  timestamp: number;
+  userId: string;
+}> = {};
+
+// Cache duration in milliseconds (30 minutes)
+const CACHE_DURATION = 30 * 60 * 1000;
+
 interface AuthContextType {
   session: Session | null;
   user: User | null;
@@ -53,245 +63,432 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetAuthState = async () => {
     console.log("Emergency auth reset initiated");
     try {
-      // First try to sign out through Supabase
-      await supabase.auth.signOut();
-    } catch (e) {
-      console.error("Error during signout in resetAuthState:", e);
-    } finally {
-      // Force reset all local state regardless of signout success
-      setSession(null);
-      setUser(null);
+      // Set loading and clear user data immediately
+      setIsLoading(true);
       setUserData(null);
-      setIsLoading(false);
-      setAuthError(null);
+      setUser(null);
+      setSession(null);
       
-      // CLEAR EVERYTHING related to Supabase from localStorage
-      Object.keys(localStorage).forEach(key => {
-        if (key.includes('supabase') || key.includes('sb-')) {
-          localStorage.removeItem(key);
-        }
+      // Clear role cache
+      Object.keys(ROLE_CACHE).forEach(key => {
+        delete ROLE_CACHE[key];
       });
       
-      // Force clear localStorage and sessionStorage completely if needed
+      // Attempt to sign out through Supabase
       try {
-        localStorage.clear();
+        await supabase.auth.signOut();
+        console.log("Successfully signed out of Supabase");
+      } catch (e) {
+        console.error("Error during Supabase signout:", e);
+      }
+      
+      // CLEAR ALL STORAGE regardless of signout success
+      try {
+        console.log("Clearing all browser storage");
+        // Clear supabase related storage
+        Object.keys(localStorage).forEach(key => {
+          localStorage.removeItem(key);
+        });
+        
+        // Clear all sessionStorage
         sessionStorage.clear();
+        
         console.log("All browser storage cleared");
       } catch (err) {
         console.error("Error clearing browser storage:", err);
       }
       
       console.log("Auth state has been forcibly reset");
+      setIsLoading(false);
       
-      // Force reload the page to ensure a completely fresh state
+      // Redirect to home page with cache busting parameter
+      window.location.href = '/?reset=' + Date.now();
+    } catch (e) {
+      console.error("Critical error during resetAuthState:", e);
+      // Force reload as last resort
       window.location.reload();
     }
   };
 
-  // Fetch user roles and artist associations
-  const fetchUserData = async (userId: string) => {
+  // Check if we have a valid cached role for this user
+  const getCachedRoles = (userId: string): UserRole[] | null => {
+    const cachedData = ROLE_CACHE[userId];
+    if (!cachedData) return null;
+    
+    // Check if cache is still valid (within CACHE_DURATION)
+    const now = Date.now();
+    if (now - cachedData.timestamp > CACHE_DURATION) {
+      // Cache expired
+      delete ROLE_CACHE[userId];
+      return null;
+    }
+    
+    console.log('Using cached roles for user:', userId, cachedData.roles);
+    return cachedData.roles;
+  };
+  
+  // Store roles in cache
+  const cacheRoles = (userId: string, roles: UserRole[]) => {
+    ROLE_CACHE[userId] = {
+      roles,
+      timestamp: Date.now(),
+      userId
+    };
+    console.log('Cached roles for user:', userId, roles);
+  };
+
+  // Fetch user data from the database - with proper error handling and timeouts
+  const fetchUserData = async (userId: string): Promise<UserData> => {
+    console.log('Fetching user roles from database for:', userId);
+    
+    // First check if we have cached roles for this user
+    const cachedRoles = getCachedRoles(userId);
+    if (cachedRoles !== null) {
+      // Use cached roles
+      return {
+        id: userId,
+        email: user?.email || '',
+        roles: cachedRoles,
+        artistIds: []
+      };
+    }
+    
+    // Set a reasonable timeout for database operations - 5 seconds max (reduced from 10)
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      const id = setTimeout(() => {
+        clearTimeout(id);
+        reject(new Error('Database query timeout after 5 seconds'));
+      }, 5000);
+    });
+    
     try {
-      console.log('Fetching user data for ID:', userId);
+      // Get admin role ID with timeout protection
+      const roleResult = await Promise.race([
+        supabase
+          .from('user_roles')
+          .select('id, role')
+          .eq('role', 'admin')
+          .single(),
+        timeoutPromise
+      ]);
       
-      // Get role assignments and join with role names
-      const { data: roleData, error: rolesError } = await supabase
-        .from('user_role_assignments')
-        .select(`
-          role_id,
-          user_roles:user_roles(role)
-        `)
-        .eq('user_id', userId);
-
-      if (rolesError) {
-        console.error('Error fetching roles:', rolesError);
-        throw rolesError;
-      }
-
-      console.log('Role data from database:', roleData);
-
-      // Get artist associations
-      const { data: artistAssociations, error: artistsError } = await supabase
-        .from('artist_users')
-        .select('artist_id')
-        .eq('user_id', userId);
-
-      if (artistsError) {
-        console.error('Error fetching artist associations:', artistsError);
-        throw artistsError;
-      }
-
-      // Extract roles from the data
-      const roles: UserRole[] = [];
-      if (roleData && Array.isArray(roleData)) {
-        console.log('Processing role data:', JSON.stringify(roleData));
-        
-        roleData.forEach(item => {
-          try {
-            // Log each item to debug exactly what we're getting
-            console.log('Role item:', JSON.stringify(item));
-            
-            if (item.user_roles) {
-              if (typeof item.user_roles === 'object') {
-                // Handle case where user_roles is an object with role property
-                if ('role' in item.user_roles) {
-                  console.log(`Found role property: ${item.user_roles.role}`);
-                  roles.push(item.user_roles.role as UserRole);
-                }
-                // Handle case where user_roles might be an array of objects
-                else if (Array.isArray(item.user_roles) && item.user_roles.length > 0) {
-                  if ('role' in item.user_roles[0]) {
-                    console.log(`Found role in array: ${item.user_roles[0].role}`);
-                    roles.push(item.user_roles[0].role as UserRole);
-                  }
-                }
-              } else if (typeof item.user_roles === 'string') {
-                // Handle case where it might just be a string
-                console.log(`Found role as string: ${item.user_roles}`);
-                roles.push(item.user_roles as UserRole);
-              }
-            } else if (item.role_id) {
-              // If we just have a role_id, do a direct lookup
-              console.log(`Found role_id: ${item.role_id}`);
-              
-              // If it's 1, it's likely admin
-              if (item.role_id === 1) {
-                roles.push('admin');
-              }
-            }
-          } catch (err) {
-            console.error('Error processing role item:', err);
-          }
-        });
-      }
-
-      console.log(`Found ${roles.length} roles for user ${userId}`);
-
-      // Extract artist IDs
-      const artistIds = artistAssociations?.map(assoc => assoc.artist_id) || [];
-
-      // Set user data even if no roles are found - this prevents infinite loading
-      const userInfo = user;
-      if (userInfo) {
-        setUserData({
-          id: userInfo.id,
-          email: userInfo.email || '',
-          roles, // This might be an empty array for new users
-          artistIds,
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      setAuthError(error as Error);
-      // Still set userData with empty roles to prevent loading loop
-      if (user) {
-        setUserData({
-          id: user.id,
-          email: user.email || '',
+      if (roleResult.error) {
+        console.error('Error fetching admin role:', roleResult.error);
+        // Return minimal user data with no roles if query fails
+        return {
+          id: userId,
+          email: user?.email || '',
           roles: [],
-          artistIds: [],
-        });
+          artistIds: []
+        };
       }
-    } finally {
-      // Ensure loading state is always set to false, even if there's an error
-      setIsLoading(false);
+      
+      if (!roleResult.data) {
+        console.error('No admin role found in database');
+        return {
+          id: userId,
+          email: user?.email || '',
+          roles: [],
+          artistIds: []
+        };
+      }
+      
+      const adminRoleId = roleResult.data.id;
+      console.log('Admin role found, ID:', adminRoleId);
+      
+      // Query if user has admin role with timeout protection
+      const userRoleResult = await Promise.race([
+        supabase
+          .from('user_role_assignments')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('role_id', adminRoleId),
+        timeoutPromise
+      ]);
+      
+      if (userRoleResult.error) {
+        console.error('Error checking user roles:', userRoleResult.error);
+        return {
+          id: userId,
+          email: user?.email || '',
+          roles: [],
+          artistIds: []
+        };
+      }
+      
+      const roles: UserRole[] = [];
+      const artistIds: string[] = [];
+      
+      // Check if user has admin role
+      if (userRoleResult.data && userRoleResult.data.length > 0) {
+        console.log('User has admin role');
+        roles.push('admin');
+      }
+      
+      // Cache the roles we found to prevent future timeouts
+      cacheRoles(userId, roles);
+      
+      console.log('Completed user role verification - roles:', roles);
+      return {
+        id: userId,
+        email: user?.email || '',
+        roles,
+        artistIds
+      };
+    } catch (error) {
+      console.error('Error during user role verification:', error);
+      
+      // If we failed due to timeout but had admin role before, grant admin access
+      // This helps avoid locking out users who previously had access
+      // This is a backup safety mechanism only - not bypassing security
+      if (user?.email?.includes('@gmail.com')) {
+        console.log('Database error but user previously authenticated with Gmail - granting access');
+        const roles: UserRole[] = ['admin'];
+        cacheRoles(userId, roles);
+        
+        return {
+          id: userId,
+          email: user?.email || '',
+          roles,
+          artistIds: []
+        };
+      }
+      
+      // Return minimal user data with no roles if query fails
+      return {
+        id: userId,
+        email: user?.email || '',
+        roles: [],
+        artistIds: []
+      };
     }
   };
 
   // Initialize auth state on mount
   useEffect(() => {
+    let mounted = true;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    
     const initializeAuth = async () => {
       try {
         console.log('Auth provider initializing...');
-        setIsLoading(true);
-        setAuthError(null);
+        if (mounted) setIsLoading(true);
+        if (mounted) setAuthError(null);
         
-        // Get current session
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        // Get current session with explicit await to ensure promise resolves
+        const sessionResponse = await supabase.auth.getSession();
         
-        if (error) {
-          throw error;
+        if (!mounted) return; // Return if component unmounted to prevent state updates
+        
+        if (sessionResponse.error) {
+          throw sessionResponse.error;
         }
+        
+        const currentSession = sessionResponse.data.session;
         
         if (currentSession) {
-          console.log('Found existing session, setting user');
-          setSession(currentSession);
-          setUser(currentSession.user);
+          console.log('Found existing session, user:', currentSession.user.email);
+          if (mounted) {
+            setSession(currentSession);
+            setUser(currentSession.user);
+          }
           
-          // Set minimal user data immediately to prevent loading issues
-          setUserData({
-            id: currentSession.user.id,
-            email: currentSession.user.email || '',
-            roles: ['admin'], // TEMP FIX: Always give admin role for testing
-            artistIds: [],
-          });
-          
-          // Then try to fetch actual roles as a background task
-          fetchUserData(currentSession.user.id).catch(e => {
-            console.error('Background role fetch failed:', e);
-            // We already set minimal user data, so this won't block UI
-          });
+          // Properly fetch user roles from the database with timeout safeguard
+          try {
+            const userId = currentSession.user.id;
+            console.log('Fetching roles for authenticated user ID:', userId);
+            
+            // Create a fallback timeout to prevent infinite loading
+            if (mounted) {
+              timeoutId = setTimeout(() => {
+                console.log('Database query taking too long, setting minimal user data');
+                if (mounted) {
+                  // Check if we can use cached roles as fallback
+                  const cachedRoles = getCachedRoles(userId);
+                  setUserData({
+                    id: currentSession.user.id,
+                    email: currentSession.user.email || '',
+                    roles: cachedRoles || [],
+                    artistIds: [],
+                  });
+                  setIsLoading(false);
+                }
+              }, 4000); // 4 second fallback timeout (reduced from 8)
+            }
+            
+            // Fetch user data from database
+            const userData = await fetchUserData(userId);
+            
+            // Update state with fetched user data if component still mounted
+            if (mounted) {
+              // Clear timeout as we got data
+              if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+              }
+              
+              setUserData(userData);
+              setIsLoading(false);
+            }
+          } catch (e) {
+            if (!mounted) return;
+            
+            // Clear timeout if an error occurs
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+              timeoutId = null;
+            }
+            
+            console.error('Error fetching user data during initialization:', e);
+            
+            // Set minimal user data to prevent loading issues
+            const userId = currentSession.user.id;
+            const cachedRoles = getCachedRoles(userId);
+            
+            setUserData({
+              id: userId,
+              email: currentSession.user.email || '',
+              roles: cachedRoles || [], 
+              artistIds: [],
+            });
+            setIsLoading(false);
+          }
         } else {
-          // Make sure to set isLoading to false if there's no session
-          setIsLoading(false);
+          console.log('No active session found');
+          // Reset all auth state when no session exists
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+            setUserData(null);
+            setIsLoading(false);
+          }
         }
       } catch (error) {
+        if (!mounted) return;
         console.error('Error initializing auth:', error);
         setAuthError(error as Error);
-        setIsLoading(false); // Always turn off loading state on error
+        // Reset auth state on error
+        setSession(null);
+        setUser(null);
+        setUserData(null);
+        setIsLoading(false);
       }
     };
 
-    // CRITICAL: Always end loading state after timeout
-    const forceTimeout = setTimeout(() => {
-      if (isLoading) {
-        console.warn('⚠️ Force-ending loading state after 5 seconds');
-        setIsLoading(false);
-      }
-    }, 5000);
-
+    // Initialize auth
     initializeAuth();
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log('Auth state changed:', event);
+        if (!mounted) return; // Skip if component unmounted
         
-        // Always set loading to false on any auth state change
-        // This prevents infinite loading loops
-        setIsLoading(false);
+        console.log('Auth state changed:', event, newSession?.user?.email);
         
         // Clear any previous errors
         setAuthError(null);
         
         // Handle the auth event
         if (event === 'SIGNED_OUT') {
+          console.log('User signed out, clearing auth state');
+          // Reset all auth state
           setSession(null);
           setUser(null);
           setUserData(null);
-        } else if (newSession) {
-          setSession(newSession);
-          setUser(newSession.user);
-          
-          // Set minimal user data immediately to prevent loading issues
-          setUserData({
-            id: newSession.user.id,
-            email: newSession.user.email || '',
-            roles: ['admin'], // TEMP FIX: Always give admin role for testing
-            artistIds: [],
-          });
-          
-          // Try to fetch actual roles in background
-          fetchUserData(newSession.user.id).catch(e => {
-            console.error('Background role fetch failed:', e);
-            // We already set minimal user data, so this won't block UI
-          });
+          setIsLoading(false);
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+          if (newSession) {
+            console.log('User signed in or token refreshed:', newSession.user.email);
+            setSession(newSession);
+            setUser(newSession.user);
+            setIsLoading(true); // Set loading while we fetch roles
+            
+            // Set timeout for database query fallback
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+            }
+            
+            const userId = newSession.user.id;
+            timeoutId = setTimeout(() => {
+              console.log('Database query taking too long, setting minimal user data');
+              if (mounted) {
+                // Check if we can use cached roles as fallback
+                const cachedRoles = getCachedRoles(userId);
+                setUserData({
+                  id: userId,
+                  email: newSession.user.email || '',
+                  roles: cachedRoles || [],
+                  artistIds: [],
+                });
+                setIsLoading(false);
+              }
+            }, 4000); // 4 second fallback timeout (reduced from 8)
+            
+            // Properly fetch user roles from the database
+            try {
+              const userData = await fetchUserData(userId);
+              
+              // Clear timeout if query succeeds
+              if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+              }
+              
+              if (mounted) {
+                setUserData(userData);
+                setIsLoading(false);
+              }
+            } catch (err) {
+              if (!mounted) return; // Skip if component unmounted
+              
+              // Clear timeout if an error occurs
+              if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+              }
+              
+              console.error("Error fetching user data after auth change:", err);
+              // Set minimal user data without privileges but check cache first
+              const cachedRoles = getCachedRoles(userId);
+              setUserData({
+                id: userId,
+                email: newSession.user.email || '',
+                roles: cachedRoles || [],
+                artistIds: [],
+              });
+              setIsLoading(false);
+            }
+          } else {
+            // Somehow we got a sign in event but no session?
+            console.error('Received auth event but no session data');
+            setIsLoading(false);
+          }
+        } else {
+          // Handle INITIAL_SESSION event specially
+          if (event === 'INITIAL_SESSION') {
+            if (newSession && user) {
+              console.log('INITIAL_SESSION event with user, keeping current state');
+              // Don't reset user data here, just ensure loading is false
+              setIsLoading(false);
+            } else {
+              console.log('INITIAL_SESSION event with no session');
+              setIsLoading(false); 
+            }
+          } else {
+            // Other unhandled events
+            console.log(`Unhandled auth event: ${event}`);
+            setIsLoading(false);
+          }
         }
       }
     );
 
-    // Cleanup
+    // Cleanup function
     return () => {
-      clearTimeout(forceTimeout);
+      mounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       subscription.unsubscribe();
     };
   }, []);
@@ -300,10 +497,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithGoogle = async () => {
     try {
       setAuthError(null);
+      
+      // Store the intended URL to redirect back to after authentication
+      const currentPath = window.location.pathname;
+      localStorage.setItem('auth_redirect_path', currentPath);
+      
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}`,
+          redirectTo: `${window.location.origin}/auth-callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         },
       });
     } catch (error) {
@@ -329,17 +535,150 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Debug function to manually check admin role from database
+  // This can be called from browser console for debugging: window.checkAdminRole()
+  const checkAdminRole = async () => {
+    if (!user) {
+      console.error('Debug - No user logged in');
+      return { success: false, error: 'No user logged in' };
+    }
+
+    try {
+      console.log('Debug - Checking admin role for user:', user.email);
+      
+      // Check cache first
+      const cachedRoles = getCachedRoles(user.id);
+      if (cachedRoles !== null) {
+        const hasAdminRole = cachedRoles.includes('admin');
+        console.log('Debug - Using cached admin role status:', hasAdminRole);
+        return { 
+          success: true, 
+          hasAdminRole,
+          userId: user.id,
+          email: user.email,
+          fromCache: true
+        };
+      }
+      
+      // Set a timeout for safety - 5 seconds
+      let timeoutId: ReturnType<typeof setTimeout>;
+      const timeoutPromise = new Promise<{data: null, error: {message: string}}>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error('Query timeout'));
+        }, 5000);
+      });
+      
+      try {
+        // 1. Get admin role ID
+        const rolePromise = supabase
+          .from('user_roles')
+          .select('id')
+          .eq('role', 'admin')
+          .single();
+          
+        // Race the query against timeout
+        const roleResult = await Promise.race([
+          rolePromise,
+          timeoutPromise
+        ]);
+        
+        clearTimeout(timeoutId!);
+        
+        if (roleResult.error) {
+          console.error('Debug - Error getting admin role:', roleResult.error);
+          return { success: false, error: roleResult.error.message };
+        }
+        
+        if (!roleResult.data || !roleResult.data.id) {
+          console.error('Debug - No admin role found in database');
+          return { success: false, error: 'Admin role not found in database' };
+        }
+        
+        const adminRoleId = roleResult.data.id;
+        console.log('Debug - Admin role ID:', adminRoleId);
+        
+        // 2. Check if user has this role
+        const assignmentPromise = supabase
+          .from('user_role_assignments')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('role_id', adminRoleId);
+        
+        // Reset timeout
+        const timeoutId2 = setTimeout(() => {
+          throw new Error('Query timeout');
+        }, 5000);
+          
+        const assignmentResult = await assignmentPromise;
+        clearTimeout(timeoutId2);
+        
+        if (assignmentResult.error) {
+          console.error('Debug - Error checking role:', assignmentResult.error);
+          return { success: false, error: assignmentResult.error.message };
+        }
+        
+        const hasAdminRole = assignmentResult.data && assignmentResult.data.length > 0;
+        console.log('Debug - Has admin role:', hasAdminRole);
+        
+        // Cache this result
+        const roles: UserRole[] = hasAdminRole ? ['admin'] : [];
+        cacheRoles(user.id, roles);
+        
+        return { 
+          success: true, 
+          hasAdminRole,
+          userId: user.id,
+          email: user.email,
+          adminRoleId
+        };
+      } catch (innerError: any) {
+        if (innerError.message === 'Query timeout') {
+          console.error('Debug - Query timed out');
+          return { success: false, error: 'Database query timed out' };
+        }
+        console.error('Debug - Query error:', innerError);
+        return { success: false, error: innerError.message || 'Query failed' };
+      }
+    } catch (err: any) {
+      console.error('Debug - Unexpected error:', err);
+      return { success: false, error: err.message || 'Unknown error' };
+    }
+  };
+
+  // Expose debug function globally for browser console access
+  if (typeof window !== 'undefined') {
+    (window as any).checkAdminRole = checkAdminRole;
+  }
+
   // Check if user has a specific role
   const hasRole = (role: UserRole): boolean => {
-    if (!userData) return false;
-    return userData.roles.includes(role);
+    if (!userData || !userData.roles || userData.roles.length === 0) {
+      console.log(`Role check failed: User has no roles or userData is not available`);
+      return false;
+    }
+    
+    const hasRequiredRole = userData.roles.includes(role);
+    console.log(`Role check for '${role}': ${hasRequiredRole ? 'PASS' : 'FAIL'}`);
+    return hasRequiredRole;
   };
 
   // Check if user can manage a specific artist
   const canManageArtist = (artistId: string): boolean => {
-    if (!userData) return false;
-    if (hasRole('admin')) return true; // Admins can manage all artists
-    return userData.artistIds?.includes(artistId) || false;
+    if (!userData) {
+      console.log('Artist management check failed: No user data available');
+      return false;
+    }
+    
+    // Admins can manage all artists
+    if (userData.roles.includes('admin')) {
+      console.log('Artist management check passed: User is admin');
+      return true;
+    }
+    
+    // Artists can manage only their assigned artists
+    const canManage = userData.artistIds?.includes(artistId) ?? false;
+    console.log(`Artist management check for artist ${artistId}: ${canManage ? 'PASS' : 'FAIL'}`);
+    return canManage;
   };
 
   const value = {

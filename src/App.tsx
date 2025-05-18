@@ -23,6 +23,9 @@ import NotFound from "./pages/NotFound";
 import EventsPage from './pages/EventsPage';
 import EventDetailPage from './pages/EventDetailPage';
 import AddEventPage from './pages/AddEventPage';
+import AuthDebugPage from './pages/AuthDebugPage';
+import AdminCheck from './pages/AdminCheck';
+import AuthCallback from './pages/AuthCallback';
 
 const queryClient = new QueryClient();
 
@@ -60,6 +63,18 @@ const App = () => (
                     } 
                   />
                   <Route path="/events/:id" element={<EventDetailPage />} />
+                  <Route 
+                    path="/auth-debug" 
+                    element={
+                      <ProtectedRoute 
+                        requiredRoles={['admin']}
+                      >
+                        <AuthDebugPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/admin-check" element={<AdminCheck />} />
+                  <Route path="/auth-callback" element={<AuthCallback />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
