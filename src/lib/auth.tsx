@@ -502,10 +502,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const currentPath = window.location.pathname;
       localStorage.setItem('auth_redirect_path', currentPath);
       
+      // Get the current URL origin or use the production URL if available
+      const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+      console.log('Using redirect URL:', `${siteUrl}/auth-callback`);
+      
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth-callback`,
+          redirectTo: `${siteUrl}/auth-callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
