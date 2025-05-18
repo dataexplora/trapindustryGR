@@ -20,25 +20,18 @@ class CacheService {
     const item = this.cache.get(key);
     
     if (!item) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Cache miss for key: ${key}`);
-      }
+      // Cache miss
       return null;
     }
     
     const now = Date.now();
     if (now - item.timestamp > item.expiresIn) {
       // Cache expired
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Cache expired for key: ${key}`);
-      }
       this.cache.delete(key);
       return null;
     }
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Cache hit for key: ${key}`);
-    }
+    // Cache hit
     return item.data as T;
   }
   
@@ -54,10 +47,6 @@ class CacheService {
       timestamp: Date.now(),
       expiresIn
     });
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Cached data for key: ${key}, expires in ${expiresIn/1000}s`);
-    }
   }
   
   /**
@@ -66,10 +55,6 @@ class CacheService {
    */
   remove(key: string): void {
     this.cache.delete(key);
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Removed cache for key: ${key}`);
-    }
   }
   
   /**
@@ -77,10 +62,6 @@ class CacheService {
    */
   clear(): void {
     this.cache.clear();
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Cache cleared');
-    }
   }
 }
 

@@ -34,8 +34,21 @@ export interface ArtistWithImages extends Artist {
     header?: string;
     gallery?: string[];
   };
-  externalLinks?: ExternalLink[];
-  topCities?: TopCity[];
+  externalLinks?: Array<{
+    id: number;
+    artist_id: string;
+    name: string;
+    url: string;
+  }>;
+  topCities?: Array<{
+    id: number;
+    artist_id: string;
+    city: string;
+    country: string;
+    region?: string;
+    listener_count?: number;
+    rank?: number;
+  }>;
 }
 
 export interface Track {
@@ -66,6 +79,12 @@ export interface Genre {
   name: string;
   description?: string;
   color?: string;
+}
+
+export interface ArtistOption {
+  label: string;
+  value: string;
+  imageUrl?: string;
 }
 
 export const artistService = {
@@ -604,6 +623,148 @@ export const artistService = {
     } catch (error) {
       console.error(`Error in getArtistTotalStreamCount for artist ${artistId}:`, error);
       return 0;
+    }
+  },
+
+  /**
+   * Get artists in a format suitable for select/multiselect dropdowns
+   */
+  getArtistsForSelect: async (): Promise<ArtistOption[]> => {
+    const cacheKey = 'artists-for-select';
+    
+    // Try to get from cache first but with shorter expiry to ensure fresh data
+    const cachedData = cacheService.get<ArtistOption[]>(cacheKey);
+    if (cachedData) {
+      // Remove verbose logging
+      return cachedData;
+    }
+    
+    try {
+      // Fetch ALL artists without any filtering
+      const { data, error } = await supabase
+        .from('artists')
+        .select(`
+          id, 
+          name,
+          verified
+        `)
+        .order('name');
+      
+      if (error) {
+        console.error('Error fetching artists for select:', error);
+        return [];
+      }
+      
+      if (!data || data.length === 0) {
+        console.warn('No artists found in the database');
+        return [];
+      }
+      
+      // Minimal logging - just count
+      console.log(`Fetched ${data.length} artists`);
+      
+      // Transform to dropdown options format
+      const options: ArtistOption[] = data.map(artist => {
+        // Format label with verification badge if verified
+        const label = artist.verified 
+          ? `${artist.name} ✓` 
+          : artist.name;
+          
+        return {
+          label,
+          value: artist.id,
+          // Don't fetch images to improve performance
+          imageUrl: undefined
+        };
+      });
+      
+      // Cache the results for a shorter time (5 minutes for development, 15 minutes for production)
+      const cacheTime = process.env.NODE_ENV === 'development' ? 5 * 60 * 1000 : 15 * 60 * 1000;
+      cacheService.set(cacheKey, options, cacheTime);
+      
+      return options;
+    } catch (error) {
+      console.error('Error in getArtistsForSelect:', error);
+      return [];
+    }
+  },
+  
+  /**
+   * Search artists in the database by name
+   * @param searchTerm The search term to look for in artist names
+   * @returns Array of artist options matching the search
+   */
+  searchArtists: async (searchTerm: string): Promise<ArtistOption[]> => {
+    if (!searchTerm || searchTerm.trim().length < 2) {
+      // If search term is too short, return empty result
+      return [];
+    }
+    
+    // Normalize search term - trim and lowercase
+    const normalizedTerm = searchTerm.trim().toLowerCase();
+    
+    // Create a cache key for this search
+    const cacheKey = `artists-search-${normalizedTerm}`;
+    
+    // Try to get from cache first
+    const cachedResults = cacheService.get<ArtistOption[]>(cacheKey);
+    if (cachedResults) {
+      // Remove verbose logging
+      return cachedResults;
+    }
+    
+    try {
+      // Minimal logging
+      console.log(`Searching for artists: "${normalizedTerm}"`);
+      
+      // Search by name with case-insensitive pattern match 
+      // using ilike for flexible matching (e.g., "hawk" will match "Bloody Hawk" too)
+      const { data, error } = await supabase
+        .from('artists')
+        .select(`
+          id, 
+          name,
+          verified
+        `)
+        .ilike('name', `%${normalizedTerm}%`)
+        .order('name')
+        .limit(100);
+      
+      if (error) {
+        console.error('Error searching artists:', error);
+        return [];
+      }
+      
+      if (!data || data.length === 0) {
+        // Minimal logging
+        console.log(`No results for "${normalizedTerm}"`);
+        return [];
+      }
+      
+      // Minimal logging - just count
+      console.log(`Found ${data.length} results for "${normalizedTerm}"`);
+      
+      // Transform to dropdown options format
+      const options: ArtistOption[] = data.map(artist => {
+        // Format label with verification badge if verified
+        const label = artist.verified 
+          ? `${artist.name} ✓` 
+          : artist.name;
+          
+        return {
+          label,
+          value: artist.id,
+          imageUrl: undefined
+        };
+      });
+      
+      // Cache the results for 5 minutes
+      cacheService.set(cacheKey, options, 5 * 60 * 1000);
+      
+      return options;
+    } catch (error) {
+      console.error(`Error searching artists with term "${normalizedTerm}":`, error);
+      return [];
     }
   }
 }; 

@@ -20,6 +20,7 @@ import ContactUs from "./pages/ContactUs";
 import NotFound from "./pages/NotFound";
 import EventsPage from './pages/EventsPage';
 import EventDetailPage from './pages/EventDetailPage';
+import AddEventPage from './pages/AddEventPage';
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/contact" element={<ContactUs />} />
                 <Route path="/events" element={<EventsPage />} />
+                <Route path="/events/add" element={<AddEventPage />} />
                 <Route path="/events/:id" element={<EventDetailPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

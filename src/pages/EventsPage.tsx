@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import EventCard from '../components/EventCard';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -168,29 +169,31 @@ const EventsPage: React.FC = () => {
               </p>
               
               {/* Search Form */}
-              <form 
-                onSubmit={handleSearchSubmit} 
-                className="mt-8 max-w-md mx-auto flex"
-              >
-                <div className="relative flex-grow">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-                    <Search className="h-5 w-5 text-slate-400" />
-                  </div>
-                  <input
-                    type="search"
-                    placeholder={t('events.search.placeholder', 'Search events...')}
-                    className="block w-full rounded-l-md border-0 bg-slate-800 py-3 pl-10 text-white shadow-sm ring-1 ring-inset ring-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600"
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                  />
-                </div>
-                <Button 
-                  type="submit" 
-                  className="rounded-l-none bg-indigo-600 hover:bg-indigo-700 text-white"
+              <div className="flex flex-col items-center mt-8">
+                <form 
+                  onSubmit={handleSearchSubmit} 
+                  className="max-w-md w-full flex"
                 >
-                  {t('events.search.button', 'Find')}
-                </Button>
-              </form>
+                  <div className="relative flex-grow">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                      <Search className="h-5 w-5 text-slate-400" />
+                    </div>
+                    <input
+                      type="search"
+                      placeholder={t('events.search.placeholder', 'Search events...')}
+                      className="block w-full rounded-l-md border-0 bg-slate-800 py-3 pl-10 text-white shadow-sm ring-1 ring-inset ring-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600"
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="rounded-l-none bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    {t('events.search.button', 'Find')}
+                  </Button>
+                </form>
+              </div>
             </div>
             
             {/* Featured Events Carousel */}

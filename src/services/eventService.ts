@@ -16,7 +16,9 @@ export interface Event {
   locationLng?: number;
   eventType: string;
   ticketUrl?: string;
+  /** @deprecated Use pricing instead */
   priceInfo?: string;
+  pricing?: PriceTier[];
   organizer?: string;
   status: 'upcoming' | 'ongoing' | 'completed' | 'canceled';
   isFeatured: boolean;
@@ -36,6 +38,11 @@ export interface Event {
   tags?: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PriceTier {
+  label: string;
+  price: number;
 }
 
 // Event list item (lightweight version)
@@ -189,6 +196,22 @@ export const eventService = {
         return null;
       }
       
+      // Parse pricing JSON if available
+      let pricingTiers: PriceTier[] | undefined = undefined;
+      if (eventData.pricing) {
+        try {
+          // If it's already an array, use it directly
+          if (Array.isArray(eventData.pricing)) {
+            pricingTiers = eventData.pricing;
+          } else {
+            // Otherwise, parse it from JSON string
+            pricingTiers = JSON.parse(eventData.pricing);
+          }
+        } catch (e) {
+          console.error('Error parsing pricing JSON:', e);
+        }
+      }
+      
       // Get event images
       const { data: imagesData, error: imagesError } = await supabase
         .from('event_images')
@@ -288,6 +311,7 @@ export const eventService = {
         eventType: eventData.event_type,
         ticketUrl: eventData.ticket_url,
         priceInfo: eventData.price_info,
+        pricing: pricingTiers,
         organizer: eventData.organizer,
         status: eventData.status as Event['status'],
         isFeatured: eventData.is_featured,

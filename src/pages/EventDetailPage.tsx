@@ -16,7 +16,8 @@ import {
   CalendarDays, 
   Building,
   Music,
-  Users
+  Users,
+  Euro
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -337,12 +338,25 @@ const EventDetailPage: React.FC = () => {
                   </Button>
                 </div>
                 
-                {event.priceInfo && (
+                {/* Simplified pricing display */}
+                {event.pricing && event.pricing.length > 0 ? (
+                  <div className="mb-4 bg-slate-900/60 border border-slate-800 rounded-lg p-4 inline-flex items-center max-w-md">
+                    <Info className="h-5 w-5 mr-3 text-yellow-500 flex-shrink-0" />
+                    <span className="text-slate-300">
+                      {event.pricing.map((tier, index) => (
+                        <React.Fragment key={index}>
+                          {index > 0 && <span className="mx-2 text-slate-500">|</span>}
+                          <span>{tier.label}: <span className="font-medium text-white">€{tier.price.toFixed(2)}</span></span>
+                        </React.Fragment>
+                      ))}
+                    </span>
+                  </div>
+                ) : event.priceInfo ? (
                   <div className="mb-4 bg-slate-900/60 border border-slate-800 rounded-lg p-4 inline-flex items-center max-w-md">
                     <Info className="h-5 w-5 mr-3 text-yellow-500" />
                     <span className="text-slate-300">{event.priceInfo}</span>
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
           </div>
