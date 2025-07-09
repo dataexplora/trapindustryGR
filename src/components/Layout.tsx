@@ -416,7 +416,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 <p className="text-gray-500 text-xs">Powered by</p>
                 <a href="https://spotify.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors text-xs">Spotify</a>
                 <span className="text-gray-600">|</span>
-                <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors text-xs">Supabase</a>
+                <a href="https://aigenta.gr" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors text-xs">AigentaGR</a>
               </div>
             </div>
           </div>
