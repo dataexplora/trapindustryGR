@@ -502,14 +502,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const currentPath = window.location.pathname;
       localStorage.setItem('auth_redirect_path', currentPath);
       
-      // Get the current URL origin or use the production URL if available
-      const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
-      console.log('Using redirect URL:', `${siteUrl}/auth-callback`);
+      // Get the exact current URL for redirect
+      // This is important: use the EXACT URL - Supabase requires an exact match
+      const isDevelopment = window.location.hostname === 'localhost';
+      const redirectUrl = isDevelopment 
+        ? `${window.location.origin}/auth-callback` 
+        : `${import.meta.env.VITE_SITE_URL || window.location.origin}/auth-callback`;
+      
+      console.log('Using redirect URL:', redirectUrl);
       
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${siteUrl}/auth-callback`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
